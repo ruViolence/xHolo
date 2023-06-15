@@ -7,6 +7,7 @@ import ru.violence.xholo.api.XHolo;
 import ru.violence.xholo.api.registry.HologramRegistry;
 import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
 import ru.violence.xholo.listener.PlayerHideListener;
+import ru.violence.xholo.listener.PluginDisableListener;
 import ru.violence.xholo.task.VisibilityUpdateTask;
 
 public class XHoloPlugin extends JavaPlugin {
@@ -19,6 +20,7 @@ public class XHoloPlugin extends JavaPlugin {
         ReflectionUtil.setFieldValue(XHolo.class, "registry", registry);
 
         getServer().getPluginManager().registerEvents(new PlayerHideListener(this), this);
+        getServer().getPluginManager().registerEvents(new PluginDisableListener(this), this);
         new VisibilityUpdateTask(this).runTaskTimer(this, 0, 1);
     }
 

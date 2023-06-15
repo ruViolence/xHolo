@@ -2,6 +2,7 @@ package ru.violence.xholo.api.impl;
 
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.violence.coreapi.common.util.Check;
@@ -12,6 +13,7 @@ import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
 
 public final class VirtualArmorStandBuilderImpl implements VirtualArmorStandBuilder {
     private final @NotNull HologramRegistryImpl registry;
+    private final @Nullable Plugin plugin;
     private @Nullable ArmorStandData data;
     private @Nullable ItemStack itemInHand;
     private @Nullable ItemStack itemInOffHand;
@@ -21,8 +23,9 @@ public final class VirtualArmorStandBuilderImpl implements VirtualArmorStandBuil
     private @Nullable ItemStack helmet;
     private @Nullable Location location;
 
-    public VirtualArmorStandBuilderImpl(@NotNull HologramRegistryImpl registry) {
+    public VirtualArmorStandBuilderImpl(@Nullable Plugin plugin, @NotNull HologramRegistryImpl registry) {
         this.registry = Check.notNull(registry, "Registry is null");
+        this.plugin = plugin;
     }
 
     @Override
@@ -123,6 +126,7 @@ public final class VirtualArmorStandBuilderImpl implements VirtualArmorStandBuil
 
         return new VirtualArmorStandImpl(
                 registry,
+                plugin,
                 data,
                 location
         );

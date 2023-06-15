@@ -2,11 +2,14 @@ package ru.violence.xholo.api;
 
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface VirtualArmorStand {
+    @Nullable Plugin getPlugin();
+
     @Contract(pure = true)
     int getEntityId();
 
