@@ -42,7 +42,7 @@
         <dependency>
             <groupId>ru.violence</groupId>
             <artifactId>coreapi-bukkit</artifactId>
-            <version>0.1.12</version>
+            <version>0.1.14</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

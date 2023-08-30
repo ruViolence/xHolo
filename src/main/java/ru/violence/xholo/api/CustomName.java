@@ -4,7 +4,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.violence.coreapi.common.message.MessageKey;
+import ru.violence.coreapi.common.api.message.MessageKey;
 
 import java.util.function.Function;
 import java.util.function.Supplier;

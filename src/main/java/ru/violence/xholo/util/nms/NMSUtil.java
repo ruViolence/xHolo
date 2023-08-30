@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.violence.coreapi.common.api.reflection.ReflectField;
 import ru.violence.coreapi.common.api.reflection.ReflectMethod;
 import ru.violence.coreapi.common.api.reflection.ReflectionUtil;
-import ru.violence.coreapi.common.util.Check;
+import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ArmorStandData;
 import ru.violence.xholo.util.UpdateFlag;
 
@@ -35,17 +35,17 @@ import java.util.UUID;
 
 @UtilityClass
 public class NMSUtil {
-    private final Object DP_ENTITY_FLAGS = ReflectionUtil.getFieldValue(Entity.class, "Z");
-    private final Object DP_ENTITY_CUSTOM_NAME = ReflectionUtil.getFieldValue(Entity.class, "aB");
-    private final Object DP_ENTITY_HAS_CUSTOM_NAME = ReflectionUtil.getFieldValue(Entity.class, "aC");
+    private final Object DP_ENTITY_FLAGS = ReflectionUtil.getFieldValue(Entity.class, null, "Z");
+    private final Object DP_ENTITY_CUSTOM_NAME = ReflectionUtil.getFieldValue(Entity.class, null, "aB");
+    private final Object DP_ENTITY_HAS_CUSTOM_NAME = ReflectionUtil.getFieldValue(Entity.class, null, "aC");
 
-    private final Object DP_ARMOR_STAND_STATUS = ReflectionUtil.getFieldValue(EntityArmorStand.class, "a");
-    private final Object DP_ARMOR_STAND_HEAD_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, "b");
-    private final Object DP_ARMOR_STAND_BODY_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, "c");
-    private final Object DP_ARMOR_STAND_LEFT_ARM_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, "d");
-    private final Object DP_ARMOR_STAND_RIGHT_ARM_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, "e");
-    private final Object DP_ARMOR_STAND_LEFT_LEG_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, "f");
-    private final Object DP_ARMOR_STAND_RIGHT_LEG_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, "g");
+    private final Object DP_ARMOR_STAND_STATUS = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "a");
+    private final Object DP_ARMOR_STAND_HEAD_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "b");
+    private final Object DP_ARMOR_STAND_BODY_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "c");
+    private final Object DP_ARMOR_STAND_LEFT_ARM_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "d");
+    private final Object DP_ARMOR_STAND_RIGHT_ARM_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "e");
+    private final Object DP_ARMOR_STAND_LEFT_LEG_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "f");
+    private final Object DP_ARMOR_STAND_RIGHT_LEG_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "g");
 
     private final ReflectMethod<Void> METHOD_DM_REGISTER = new ReflectMethod<>(DataWatcher.class, "register", DataWatcherObject.class, Object.class);
 
@@ -70,19 +70,19 @@ public class NMSUtil {
 
     public void spawnEntityLiving(@NotNull Player player, @NotNull Location location, int entityTypeId, int entityId, @NotNull Object dataWatcher) {
         PacketPlayOutSpawnEntityLiving packet = new PacketPlayOutSpawnEntityLiving();
-        ReflectionUtil.setFieldValue(packet, "a", entityId);                                               // entityId
-        ReflectionUtil.setFieldValue(packet, "b", UUID.randomUUID());                                      // uniqueId
-        ReflectionUtil.setFieldValue(packet, "c", entityTypeId);                                           // typeId
-        ReflectionUtil.setFieldValue(packet, "d", location.getX());                                        // locX
-        ReflectionUtil.setFieldValue(packet, "e", location.getY());                                        // locY
-        ReflectionUtil.setFieldValue(packet, "f", location.getZ());                                        // locZ
-        ReflectionUtil.setFieldValue(packet, "j", (byte) ((int) (location.getYaw() * 256.0F / 360.0F)));   // yaw
-        ReflectionUtil.setFieldValue(packet, "k", (byte) ((int) (location.getPitch() * 256.0F / 360.0F))); // pitch
-        ReflectionUtil.setFieldValue(packet, "l", (byte) ((int) (location.getYaw() * 256.0F / 360.0F)));   // rotationHeadYaw
-        ReflectionUtil.setFieldValue(packet, "g", 0);                                                      // velocityX
-        ReflectionUtil.setFieldValue(packet, "h", 0);                                                      // velocityY
-        ReflectionUtil.setFieldValue(packet, "i", 0);                                                      // velocityZ
-        ReflectionUtil.setFieldValue(packet, "m", dataWatcher);                                            // dataWatcher
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "a", entityId);                                               // entityId
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "b", UUID.randomUUID());                                      // uniqueId
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "c", entityTypeId);                                           // typeId
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "d", location.getX());                                        // locX
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "e", location.getY());                                        // locY
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "f", location.getZ());                                        // locZ
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "j", (byte) ((int) (location.getYaw() * 256.0F / 360.0F)));   // yaw
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "k", (byte) ((int) (location.getPitch() * 256.0F / 360.0F))); // pitch
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "l", (byte) ((int) (location.getYaw() * 256.0F / 360.0F)));   // rotationHeadYaw
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "g", 0);                                                      // velocityX
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "h", 0);                                                      // velocityY
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "i", 0);                                                      // velocityZ
+        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "m", dataWatcher);                                            // dataWatcher
 
         sendPacket(player, packet);
     }
@@ -101,13 +101,13 @@ public class NMSUtil {
 
     public void teleportEntity(@NotNull Player player, int entityId, @NotNull Location location) {
         PacketPlayOutEntityTeleport packet = new PacketPlayOutEntityTeleport();
-        ReflectionUtil.setFieldValue(packet, "a", entityId);                                               // entityId
-        ReflectionUtil.setFieldValue(packet, "b", location.getX());                                        // posX
-        ReflectionUtil.setFieldValue(packet, "c", location.getY());                                        // posY
-        ReflectionUtil.setFieldValue(packet, "d", location.getZ());                                        // posZ
-        ReflectionUtil.setFieldValue(packet, "e", (byte) ((int) (location.getYaw() * 256.0F / 360.0F)));   // yaw
-        ReflectionUtil.setFieldValue(packet, "f", (byte) ((int) (location.getPitch() * 256.0F / 360.0F))); // pitch
-        ReflectionUtil.setFieldValue(packet, "g", true);                                                   // onGround
+        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "a", entityId);                                               // entityId
+        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "b", location.getX());                                        // posX
+        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "c", location.getY());                                        // posY
+        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "d", location.getZ());                                        // posZ
+        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "e", (byte) ((int) (location.getYaw() * 256.0F / 360.0F)));   // yaw
+        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "f", (byte) ((int) (location.getPitch() * 256.0F / 360.0F))); // pitch
+        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "g", true);                                                   // onGround
 
         sendPacket(player, packet);
     }

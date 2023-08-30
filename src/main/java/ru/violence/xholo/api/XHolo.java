@@ -3,7 +3,7 @@ package ru.violence.xholo.api;
 import lombok.experimental.UtilityClass;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import ru.violence.coreapi.common.util.Check;
+import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.impl.VirtualArmorStandBuilderImpl;
 import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
 

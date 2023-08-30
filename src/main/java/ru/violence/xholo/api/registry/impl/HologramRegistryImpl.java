@@ -2,7 +2,7 @@ package ru.violence.xholo.api.registry.impl;
 
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
-import ru.violence.coreapi.common.util.Check;
+import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.XHoloPlugin;
 import ru.violence.xholo.api.VirtualArmorStand;
 import ru.violence.xholo.api.registry.HologramRegistry;

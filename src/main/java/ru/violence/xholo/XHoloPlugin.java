@@ -17,7 +17,7 @@ public class XHoloPlugin extends JavaPlugin {
     public void onEnable() {
         this.registry = new HologramRegistryImpl(this);
 
-        ReflectionUtil.setFieldValue(XHolo.class, "registry", registry);
+        ReflectionUtil.setFieldValue(XHolo.class, null, "registry", registry);
 
         getServer().getPluginManager().registerEvents(new PlayerHideListener(this), this);
         getServer().getPluginManager().registerEvents(new PluginDisableListener(this), this);
@@ -30,7 +30,7 @@ public class XHoloPlugin extends JavaPlugin {
             vas.manager().unregister();
         }
 
-        ReflectionUtil.setFieldValue(XHolo.class, "registry", null);
+        ReflectionUtil.setFieldValue(XHolo.class, null, "registry", null);
     }
 
     public HologramRegistry getRegistry() {

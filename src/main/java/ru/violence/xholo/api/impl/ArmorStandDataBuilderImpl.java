@@ -3,7 +3,7 @@ package ru.violence.xholo.api.impl;
 import org.bukkit.util.EulerAngle;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.violence.coreapi.common.util.Check;
+import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ArmorStandData;
 import ru.violence.xholo.api.ArmorStandDataBuilder;
 import ru.violence.xholo.api.CustomName;
