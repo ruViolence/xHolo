@@ -12,7 +12,7 @@ public class XHolo {
     private HologramRegistryImpl registry;
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull VirtualArmorStandBuilder builder(@NotNull Plugin plugin) {
+    public static @NotNull VirtualArmorStandBuilder armorStand(@NotNull Plugin plugin) {
         return new VirtualArmorStandBuilderImpl(plugin, registry);
     }
 }
