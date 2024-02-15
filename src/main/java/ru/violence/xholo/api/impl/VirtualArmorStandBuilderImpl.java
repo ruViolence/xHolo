@@ -13,7 +13,7 @@ import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
 
 public final class VirtualArmorStandBuilderImpl implements VirtualArmorStandBuilder {
     private final @NotNull HologramRegistryImpl registry;
-    private final @Nullable Plugin plugin;
+    private final @NotNull Plugin plugin;
     private @Nullable ArmorStandData data;
     private @Nullable ItemStack itemInHand;
     private @Nullable ItemStack itemInOffHand;
@@ -23,9 +23,9 @@ public final class VirtualArmorStandBuilderImpl implements VirtualArmorStandBuil
     private @Nullable ItemStack helmet;
     private @Nullable Location location;
 
-    public VirtualArmorStandBuilderImpl(@Nullable Plugin plugin, @NotNull HologramRegistryImpl registry) {
+    public VirtualArmorStandBuilderImpl(@NotNull Plugin plugin, @NotNull HologramRegistryImpl registry) {
+        this.plugin = Check.notNull(plugin, "Plugin is null");
         this.registry = Check.notNull(registry, "Registry is null");
-        this.plugin = plugin;
     }
 
     @Override

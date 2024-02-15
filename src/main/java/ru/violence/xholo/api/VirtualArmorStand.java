@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface VirtualArmorStand {
-    @Nullable Plugin getPlugin();
+    @NotNull Plugin getPlugin();
 
     @Contract(pure = true)
     int getEntityId();

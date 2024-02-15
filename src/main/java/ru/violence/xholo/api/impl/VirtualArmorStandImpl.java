@@ -19,7 +19,7 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
     private final HologramRegistryImpl registry;
     private final ManagerImpl manager;
 
-    private final @Nullable Plugin plugin;
+    private final @NotNull Plugin plugin;
     private @NotNull ArmorStandData data;
     private @Nullable ItemStack itemInHand;
     private @Nullable ItemStack itemInOffHand;
@@ -29,7 +29,7 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
     private @Nullable ItemStack helmet;
     private @NotNull Location location;
 
-    public VirtualArmorStandImpl(@NotNull HologramRegistryImpl registry, @Nullable Plugin plugin, @NotNull ArmorStandData data, @NotNull Location location,
+    public VirtualArmorStandImpl(@NotNull HologramRegistryImpl registry, @NotNull Plugin plugin, @NotNull ArmorStandData data, @NotNull Location location,
                                  @Nullable ItemStack itemInHand,
                                  @Nullable ItemStack itemInOffHand,
                                  @Nullable ItemStack boots,
@@ -37,7 +37,7 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
                                  @Nullable ItemStack chestplate,
                                  @Nullable ItemStack helmet) {
         this.registry = Check.notNull(registry, "Registry is null");
-        this.plugin = plugin;
+        this.plugin = Check.notNull(plugin, "Plugin is null");
         this.data = Check.notNull(data, "Data is null");
         this.location = Check.notNull(location, "Location is null");
         this.itemInHand = itemInHand;
@@ -51,7 +51,7 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
     }
 
     @Override
-    public @Nullable Plugin getPlugin() {
+    public @NotNull Plugin getPlugin() {
         return plugin;
     }
 
