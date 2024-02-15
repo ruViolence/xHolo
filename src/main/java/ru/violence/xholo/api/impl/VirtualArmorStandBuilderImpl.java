@@ -128,7 +128,13 @@ public final class VirtualArmorStandBuilderImpl implements VirtualArmorStandBuil
                 registry,
                 plugin,
                 data,
-                location
+                location,
+                itemInHand,
+                itemInOffHand,
+                boots,
+                leggings,
+                chestplate,
+                helmet
         );
     }
 }

@@ -29,11 +29,23 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
     private @Nullable ItemStack helmet;
     private @NotNull Location location;
 
-    public VirtualArmorStandImpl(@NotNull HologramRegistryImpl registry, @Nullable Plugin plugin, @NotNull ArmorStandData data, @NotNull Location location) {
+    public VirtualArmorStandImpl(@NotNull HologramRegistryImpl registry, @Nullable Plugin plugin, @NotNull ArmorStandData data, @NotNull Location location,
+                                 @Nullable ItemStack itemInHand,
+                                 @Nullable ItemStack itemInOffHand,
+                                 @Nullable ItemStack boots,
+                                 @Nullable ItemStack leggings,
+                                 @Nullable ItemStack chestplate,
+                                 @Nullable ItemStack helmet) {
         this.registry = Check.notNull(registry, "Registry is null");
         this.plugin = plugin;
         this.data = Check.notNull(data, "Data is null");
         this.location = Check.notNull(location, "Location is null");
+        this.itemInHand = itemInHand;
+        this.itemInOffHand = itemInOffHand;
+        this.boots = boots;
+        this.leggings = leggings;
+        this.chestplate = chestplate;
+        this.helmet = helmet;
         Check.notNull(location.getWorld(), "World is null");
         this.manager = new ManagerImpl(this);
     }

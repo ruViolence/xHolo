@@ -1,5 +1,6 @@
 package ru.violence.xholo.api;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -9,10 +10,10 @@ import ru.violence.coreapi.common.api.message.MessageKey;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public interface CustomName extends Function<Player, String>, Supplier<String> {
+public interface CustomName extends Function<Player, Component>, Supplier<Component> {
     @Contract(value = "_ -> new", pure = true)
-    static @NotNull StringName text(@NotNull String text) {
-        return new StringName(text);
+    static @NotNull ComponentName component(@NotNull Component component) {
+        return new ComponentName(component);
     }
 
     @Contract(value = "_ -> new", pure = true)
@@ -21,17 +22,17 @@ public interface CustomName extends Function<Player, String>, Supplier<String> {
     }
 
     @Contract(value = "_ -> new", pure = true)
-    static @NotNull FunctionName func(@NotNull Function<Player, String> function) {
+    static @NotNull FunctionName func(@NotNull Function<@Nullable Player, @Nullable Component> function) {
         return new FunctionName(function);
     }
 
     @Override
     @Contract(pure = true)
-    @Nullable String apply(@Nullable Player player);
+    @Nullable Component apply(@Nullable Player player);
 
     @Override
     @Contract(pure = true)
-    default @Nullable String get() {
+    default @Nullable Component get() {
         return apply(null);
     }
 }

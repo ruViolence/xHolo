@@ -15,7 +15,9 @@ import ru.violence.xholo.util.UpdateFlag;
 import ru.violence.xholo.util.Utils;
 import ru.violence.xholo.util.nms.NMSUtil;
 
+import java.util.AbstractMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -48,14 +50,13 @@ public final class ManagerImpl implements Manager {
 
             int entityId = vas.getEntityId();
 
-            NMSUtil.spawnEntityArmorStand(player, entityId, vas.getLocation(), vas.getData());
-
-            NMSUtil.sendEquipment(player, entityId, EquipmentSlot.HAND, vas.getItemInHand());
-            NMSUtil.sendEquipment(player, entityId, EquipmentSlot.OFF_HAND, vas.getItemInOffHand());
-            NMSUtil.sendEquipment(player, entityId, EquipmentSlot.HEAD, vas.getHelmet());
-            NMSUtil.sendEquipment(player, entityId, EquipmentSlot.CHEST, vas.getChestplate());
-            NMSUtil.sendEquipment(player, entityId, EquipmentSlot.LEGS, vas.getLeggings());
-            NMSUtil.sendEquipment(player, entityId, EquipmentSlot.FEET, vas.getBoots());
+            NMSUtil.spawnEntityArmorStand(player, entityId, vas.getLocation(), vas.getData(),
+                    vas.getItemInHand(),
+                    vas.getItemInOffHand(),
+                    vas.getHelmet(),
+                    vas.getChestplate(),
+                    vas.getLeggings(),
+                    vas.getBoots());
 
             return true;
         }
@@ -203,7 +204,7 @@ public final class ManagerImpl implements Manager {
             int entityId = vas.getEntityId();
 
             for (Player player : viewers) {
-                NMSUtil.sendEquipment(player, entityId, slot, item);
+                NMSUtil.sendEquipment(player, entityId, new Map.Entry[]{new AbstractMap.SimpleEntry<>(slot, item)}, false);
             }
         }
     }

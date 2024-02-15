@@ -1,4 +1,5 @@
 name: xHolo
 main: ru.violence.xholo.XHoloPlugin
-version: ${project.version}
+version: $version
+api-version: '$apiVersion'
 depend: [ CoreAPI ]

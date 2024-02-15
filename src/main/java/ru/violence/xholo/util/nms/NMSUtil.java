@@ -1,22 +1,29 @@
 package ru.violence.xholo.util.nms;
 
+import com.mojang.datafixers.util.Pair;
+import io.netty.buffer.Unpooled;
 import lombok.experimental.UtilityClass;
-import net.minecraft.server.v1_12_R1.DataWatcher;
-import net.minecraft.server.v1_12_R1.DataWatcherObject;
-import net.minecraft.server.v1_12_R1.Entity;
-import net.minecraft.server.v1_12_R1.EntityArmorStand;
-import net.minecraft.server.v1_12_R1.EntityPlayer;
-import net.minecraft.server.v1_12_R1.EnumItemSlot;
-import net.minecraft.server.v1_12_R1.Packet;
-import net.minecraft.server.v1_12_R1.PacketPlayOutEntityDestroy;
-import net.minecraft.server.v1_12_R1.PacketPlayOutEntityEquipment;
-import net.minecraft.server.v1_12_R1.PacketPlayOutEntityMetadata;
-import net.minecraft.server.v1_12_R1.PacketPlayOutEntityTeleport;
-import net.minecraft.server.v1_12_R1.PacketPlayOutSpawnEntityLiving;
-import net.minecraft.server.v1_12_R1.Vector3f;
+import net.minecraft.core.Rotations;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
+import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
+import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -24,114 +31,141 @@ import org.bukkit.util.EulerAngle;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.violence.coreapi.common.api.reflection.ReflectField;
 import ru.violence.coreapi.common.api.reflection.ReflectMethod;
 import ru.violence.coreapi.common.api.reflection.ReflectionUtil;
 import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ArmorStandData;
 import ru.violence.xholo.util.UpdateFlag;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @UtilityClass
 public class NMSUtil {
-    private final Object DP_ENTITY_FLAGS = ReflectionUtil.getFieldValue(Entity.class, null, "Z");
-    private final Object DP_ENTITY_CUSTOM_NAME = ReflectionUtil.getFieldValue(Entity.class, null, "aB");
-    private final Object DP_ENTITY_HAS_CUSTOM_NAME = ReflectionUtil.getFieldValue(Entity.class, null, "aC");
+    private final AtomicInteger ENTITY_COUNTER = ReflectionUtil.getFieldValue(Entity.class, null, "d");
 
-    private final Object DP_ARMOR_STAND_STATUS = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "a");
-    private final Object DP_ARMOR_STAND_HEAD_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "b");
-    private final Object DP_ARMOR_STAND_BODY_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "c");
-    private final Object DP_ARMOR_STAND_LEFT_ARM_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "d");
-    private final Object DP_ARMOR_STAND_RIGHT_ARM_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "e");
-    private final Object DP_ARMOR_STAND_LEFT_LEG_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "f");
-    private final Object DP_ARMOR_STAND_RIGHT_LEG_ROTATION = ReflectionUtil.getFieldValue(EntityArmorStand.class, null, "g");
+    private final EntityDataAccessor<Byte> DP_ENTITY_SHARED_FLAGS = ReflectionUtil.getFieldValue(Entity.class, null, "ao");
+    private final EntityDataAccessor<Optional<Component>> DP_ENTITY_CUSTOM_NAME = ReflectionUtil.getFieldValue(Entity.class, null, "aU");
+    private final EntityDataAccessor<Boolean> DP_ENTITY_CUSTOM_NAME_VISIBLE = ReflectionUtil.getFieldValue(Entity.class, null, "aV");
 
-    private final ReflectMethod<Void> METHOD_DM_REGISTER = new ReflectMethod<>(DataWatcher.class, "register", DataWatcherObject.class, Object.class);
+    private final EntityDataAccessor<Byte> DP_ARMOR_STAND_CLIENT_FLAGS = ArmorStand.DATA_CLIENT_FLAGS;
+    private final EntityDataAccessor<Rotations> DP_ARMOR_STAND_HEAD_POSE = ArmorStand.DATA_HEAD_POSE;
+    private final EntityDataAccessor<Rotations> DP_ARMOR_STAND_BODY_POSE = ArmorStand.DATA_BODY_POSE;
+    private final EntityDataAccessor<Rotations> DP_ARMOR_STAND_LEFT_ARM_POSE = ArmorStand.DATA_LEFT_ARM_POSE;
+    private final EntityDataAccessor<Rotations> DP_ARMOR_STAND_RIGHT_ARM_POSE = ArmorStand.DATA_RIGHT_ARM_POSE;
+    private final EntityDataAccessor<Rotations> DP_ARMOR_STAND_LEFT_LEG_POSE = ArmorStand.DATA_LEFT_LEG_POSE;
+    private final EntityDataAccessor<Rotations> DP_ARMOR_STAND_RIGHT_LEG_POSE = ArmorStand.DATA_RIGHT_LEG_POSE;
+
+    private final ReflectMethod<Integer> METHOD_TRACKEDENTITY_GETEFFECTIVERANGE = new ReflectMethod<>(ChunkMap.TrackedEntity.class, "b", (Class<?>[]) null);
 
     public boolean isRealPlayer(@NotNull Player player) {
         if (player instanceof CraftPlayer) {
-            EntityPlayer handle = ((CraftPlayer) player).getHandle();
-            return handle != null && handle.playerConnection != null;
+            ServerPlayer handle = ((CraftPlayer) player).getHandle();
+            return handle != null && handle.connection != null;
         }
         return false;
     }
 
-    @Contract(pure = true)
-    public int getArmorStandEntityTypeId() {
-        return 30; // ArmorStand (1.12.2)
+    public void spawnEntityArmorStand(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ArmorStandData data,
+                                      @Nullable ItemStack mainHandItem,
+                                      @Nullable ItemStack offHandItem,
+                                      @Nullable ItemStack headItem,
+                                      @Nullable ItemStack chestItem,
+                                      @Nullable ItemStack legsItem,
+                                      @Nullable ItemStack feetItem) {
+        spawnEntityLiving(player, location, entityId);
+        updateMetadata(player, entityId, data, null);
+
+        sendEquipment(player, entityId, new Map.Entry[]{
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.HAND, mainHandItem),
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.OFF_HAND, offHandItem),
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.HEAD, headItem),
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.CHEST, chestItem),
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.LEGS, legsItem),
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.FEET, feetItem)
+        }, true);
     }
 
-    public void spawnEntityArmorStand(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ArmorStandData data) {
-        DataWatcher dataWatcher = createDataWatcher(player, data);
-
-        spawnEntityLiving(player, location, getArmorStandEntityTypeId(), entityId, dataWatcher);
-    }
-
-    public void spawnEntityLiving(@NotNull Player player, @NotNull Location location, int entityTypeId, int entityId, @NotNull Object dataWatcher) {
-        PacketPlayOutSpawnEntityLiving packet = new PacketPlayOutSpawnEntityLiving();
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "a", entityId);                                               // entityId
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "b", UUID.randomUUID());                                      // uniqueId
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "c", entityTypeId);                                           // typeId
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "d", location.getX());                                        // locX
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "e", location.getY());                                        // locY
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "f", location.getZ());                                        // locZ
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "j", (byte) ((int) (location.getYaw() * 256.0F / 360.0F)));   // yaw
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "k", (byte) ((int) (location.getPitch() * 256.0F / 360.0F))); // pitch
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "l", (byte) ((int) (location.getYaw() * 256.0F / 360.0F)));   // rotationHeadYaw
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "g", 0);                                                      // velocityX
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "h", 0);                                                      // velocityY
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "i", 0);                                                      // velocityZ
-        ReflectionUtil.setFieldValue(PacketPlayOutSpawnEntityLiving.class, packet, "m", dataWatcher);                                            // dataWatcher
+    public void spawnEntityLiving(@NotNull Player player, @NotNull Location location, int entityId) {
+        ClientboundAddEntityPacket packet = new ClientboundAddEntityPacket(
+                entityId,
+                UUID.randomUUID(),
+                location.getX(),
+                location.getY(),
+                location.getZ(),
+                location.getPitch(),
+                location.getYaw(),
+                EntityType.ARMOR_STAND,
+                0,
+                Vec3.ZERO,
+                location.getYaw()
+        );
 
         sendPacket(player, packet);
     }
 
-    public void sendEquipment(@NotNull Player player, int entityId, @NotNull EquipmentSlot slot, @Nullable ItemStack item) {
-        net.minecraft.server.v1_12_R1.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
-        sendPacket(player, new PacketPlayOutEntityEquipment(entityId, toNMS(slot), nmsItem));
+    public void sendEquipment(@NotNull Player player, int entityId,
+                              @Nullable Map.Entry<EquipmentSlot, ItemStack>[] equipment,
+                              boolean isOnSpawn) {
+        if (equipment == null || equipment.length == 0) return;
+
+        List<Pair<net.minecraft.world.entity.EquipmentSlot, net.minecraft.world.item.ItemStack>> equipmentList = new ArrayList<>(equipment.length);
+
+        for (Map.Entry<EquipmentSlot, ItemStack> pair : equipment) {
+            if (isOnSpawn && (pair.getValue() == null || pair.getValue().getType() == Material.AIR)) continue;
+            equipmentList.add(Pair.of(toNMS(pair.getKey()), CraftItemStack.asNMSCopy(pair.getValue())));
+        }
+
+        if (!equipmentList.isEmpty()) {
+            sendPacket(player, new ClientboundSetEquipmentPacket(entityId, equipmentList));
+        }
     }
 
     public void updateMetadata(@NotNull Player player, int entityId, @NotNull ArmorStandData data, UpdateFlag @Nullable [] flags) {
-        DataWatcher watcher = flags == null || flags.length == 0
+        SynchedEntityData watcher = flags == null || flags.length == 0
                 ? createDataWatcher(player, data)
                 : createDataWatcher(player, data, flags);
-        sendPacket(player, new PacketPlayOutEntityMetadata(entityId, watcher, true));
+
+        List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
+        sendPacket(player, new ClientboundSetEntityDataPacket(entityId, dataValues));
     }
 
     public void teleportEntity(@NotNull Player player, int entityId, @NotNull Location location) {
-        PacketPlayOutEntityTeleport packet = new PacketPlayOutEntityTeleport();
-        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "a", entityId);                                               // entityId
-        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "b", location.getX());                                        // posX
-        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "c", location.getY());                                        // posY
-        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "d", location.getZ());                                        // posZ
-        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "e", (byte) ((int) (location.getYaw() * 256.0F / 360.0F)));   // yaw
-        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "f", (byte) ((int) (location.getPitch() * 256.0F / 360.0F))); // pitch
-        ReflectionUtil.setFieldValue(PacketPlayOutEntityTeleport.class, packet, "g", true);                                                   // onGround
+        FriendlyByteBuf fbb = new FriendlyByteBuf(Unpooled.buffer());
 
-        sendPacket(player, packet);
+        fbb.writeVarInt(entityId);
+        fbb.writeDouble(location.getX());
+        fbb.writeDouble(location.getY());
+        fbb.writeDouble(location.getZ());
+        fbb.writeByte((byte) ((int) (location.getYaw() * 256.0F / 360.0F)));
+        fbb.writeByte((byte) ((int) (location.getPitch() * 256.0F / 360.0F)));
+        fbb.writeBoolean(true); // onGround
+
+        sendPacket(player, new ClientboundTeleportEntityPacket(fbb));
     }
 
     public void destroyEntities(@NotNull Player player, int @NotNull ... entityIds) {
-        sendPacket(player, new PacketPlayOutEntityDestroy(entityIds));
+        sendPacket(player, new ClientboundRemoveEntitiesPacket(entityIds));
     }
 
     public void sendPacket(@NotNull Player player, @NotNull Object packet) {
         Check.isTrue(Packet.class.isAssignableFrom(packet.getClass()), "Object is not a packet");
-        ((CraftPlayer) player).getHandle().playerConnection.sendPacket((Packet<?>) packet);
+        ((CraftPlayer) player).getHandle().connection.send((Packet<?>) packet);
     }
 
     @Contract(pure = true)
     public int getNextEntityId() {
-        ReflectField<Integer> field = new ReflectField<>(Entity.class, "entityCount");
-        int id = field.getValue(null);
-        field.setValue(null, id + 1);
-        return id;
+        return ENTITY_COUNTER.incrementAndGet();
     }
 
     @Contract(pure = true)
-    private @NotNull DataWatcher createDataWatcher(@NotNull Player player, @NotNull ArmorStandData data) {
-        DataWatcher watcher = new DataWatcher(null);
+    private @NotNull SynchedEntityData createDataWatcher(@NotNull Player player, @NotNull ArmorStandData data) {
+        SynchedEntityData watcher = new SynchedEntityData(null);
 
         // Set entity flags
         setDWEntityFlags(watcher, !data.isVisible());
@@ -140,7 +174,7 @@ public class NMSUtil {
         setDWCustomName(watcher, data.getCustomName() != null ? data.getCustomName().apply(player) : null);
 
         // Set ArmorStand status
-        setDWArmorStandStatus(watcher, data.isSmall(), data.isHasArms(), !data.isHasBasePlate(), data.isMarker());
+        setDWArmorStandClientFlags(watcher, data.isSmall(), data.isHasArms(), !data.isHasBasePlate(), data.isMarker());
 
         // Set rotations
         if (data.getHeadPose() != null) setDWArmorStandHeadPose(watcher, data.getHeadPose());
@@ -154,15 +188,15 @@ public class NMSUtil {
     }
 
     @Contract(pure = true)
-    public @NotNull DataWatcher createDataWatcher(@NotNull Player player, @NotNull ArmorStandData data, UpdateFlag @Nullable [] flags) {
+    public @NotNull SynchedEntityData createDataWatcher(@NotNull Player player, @NotNull ArmorStandData data, UpdateFlag @Nullable [] flags) {
         if (flags == null || flags.length == 0) return createDataWatcher(player, data);
 
-        DataWatcher watcher = new DataWatcher(null);
+        SynchedEntityData watcher = new SynchedEntityData(null);
 
         for (UpdateFlag flag : flags) {
             switch (flag) {
                 case STATUS:
-                    setDWArmorStandStatus(watcher, data.isSmall(), data.isHasArms(), !data.isHasBasePlate(), data.isMarker());
+                    setDWArmorStandClientFlags(watcher, data.isSmall(), data.isHasArms(), !data.isHasBasePlate(), data.isMarker());
                     break;
                 case FLAGS:
                     setDWEntityFlags(watcher, !data.isVisible());
@@ -195,8 +229,8 @@ public class NMSUtil {
     }
 
     @Contract(pure = true)
-    private @NotNull Vector3f toNMS(@NotNull EulerAngle old) {
-        return new Vector3f(
+    private @NotNull Rotations toNMS(@NotNull EulerAngle old) {
+        return new Rotations(
                 (float) Math.toDegrees(old.getX()),
                 (float) Math.toDegrees(old.getY()),
                 (float) Math.toDegrees(old.getZ())
@@ -204,20 +238,20 @@ public class NMSUtil {
     }
 
     @Contract(pure = true)
-    private @NotNull EnumItemSlot toNMS(@NotNull EquipmentSlot old) {
+    private @NotNull net.minecraft.world.entity.EquipmentSlot toNMS(@NotNull EquipmentSlot old) {
         switch (old) {
             case HAND:
-                return EnumItemSlot.MAINHAND;
+                return net.minecraft.world.entity.EquipmentSlot.MAINHAND;
             case OFF_HAND:
-                return EnumItemSlot.OFFHAND;
+                return net.minecraft.world.entity.EquipmentSlot.OFFHAND;
             case FEET:
-                return EnumItemSlot.FEET;
+                return net.minecraft.world.entity.EquipmentSlot.FEET;
             case LEGS:
-                return EnumItemSlot.LEGS;
+                return net.minecraft.world.entity.EquipmentSlot.LEGS;
             case CHEST:
-                return EnumItemSlot.CHEST;
+                return net.minecraft.world.entity.EquipmentSlot.CHEST;
             case HEAD:
-                return EnumItemSlot.HEAD;
+                return net.minecraft.world.entity.EquipmentSlot.HEAD;
             default:
                 throw new IllegalStateException("Unexpected value: " + old);
         }
@@ -242,51 +276,56 @@ public class NMSUtil {
     }
 
     public int getFurthestViewableBlock(@NotNull Player player) {
-        return ((CraftPlayer) player).getHandle().getFurthestViewableBlock();
+        return METHOD_TRACKEDENTITY_GETEFFECTIVERANGE.invoke(((CraftPlayer) player).getHandle().tracker);
     }
 
-    private void setDWEntityFlags(@NotNull DataWatcher watcher, boolean invisible) {
+    private void setDWEntityFlags(@NotNull SynchedEntityData watcher, boolean invisible) {
         byte flags = 0;
         flags = setFlag(flags, 0x5, invisible);
-        METHOD_DM_REGISTER.invoke(watcher, DP_ENTITY_FLAGS, flags);
+        defineDataValue(watcher, DP_ENTITY_SHARED_FLAGS, flags);
     }
 
-    private void setDWCustomName(@NotNull DataWatcher watcher, @Nullable String customName) {
-        if (customName == null) customName = "";
-        METHOD_DM_REGISTER.invoke(watcher, DP_ENTITY_CUSTOM_NAME, customName);
-        METHOD_DM_REGISTER.invoke(watcher, DP_ENTITY_HAS_CUSTOM_NAME, !customName.isEmpty());
+    private void setDWCustomName(@NotNull SynchedEntityData watcher, @Nullable net.kyori.adventure.text.Component customName) {
+        Component nmsName = customName != null ? io.papermc.paper.adventure.PaperAdventure.asVanilla(customName) : null;
+        defineDataValue(watcher, DP_ENTITY_CUSTOM_NAME, Optional.ofNullable(nmsName));
+        defineDataValue(watcher, DP_ENTITY_CUSTOM_NAME_VISIBLE, nmsName != null);
     }
 
-    private void setDWArmorStandStatus(@NotNull DataWatcher watcher, boolean small, boolean hasArms, boolean noBasePlate, boolean marker) {
+    private void setDWArmorStandClientFlags(@NotNull SynchedEntityData watcher, boolean small, boolean hasArms, boolean noBasePlate, boolean marker) {
         byte status = 0;
         status = setStatus(status, 0x1, small);
         status = setStatus(status, 0x4, hasArms);
         status = setStatus(status, 0x8, noBasePlate);
         status = setStatus(status, 0x10, marker);
-        METHOD_DM_REGISTER.invoke(watcher, DP_ARMOR_STAND_STATUS, status);
+        defineDataValue(watcher, DP_ARMOR_STAND_CLIENT_FLAGS, status);
     }
 
-    private void setDWArmorStandHeadPose(@NotNull DataWatcher watcher, @NotNull EulerAngle pose) {
-        METHOD_DM_REGISTER.invoke(watcher, DP_ARMOR_STAND_HEAD_ROTATION, toNMS(pose));
+    private void setDWArmorStandHeadPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
+        defineDataValue(watcher, DP_ARMOR_STAND_HEAD_POSE, toNMS(pose));
     }
 
-    private void setDWArmorStandBodyPose(@NotNull DataWatcher watcher, @NotNull EulerAngle pose) {
-        METHOD_DM_REGISTER.invoke(watcher, DP_ARMOR_STAND_BODY_ROTATION, toNMS(pose));
+    private void setDWArmorStandBodyPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
+        defineDataValue(watcher, DP_ARMOR_STAND_BODY_POSE, toNMS(pose));
     }
 
-    private void setDWArmorStandLeftArmPose(@NotNull DataWatcher watcher, @NotNull EulerAngle pose) {
-        METHOD_DM_REGISTER.invoke(watcher, DP_ARMOR_STAND_LEFT_ARM_ROTATION, toNMS(pose));
+    private void setDWArmorStandLeftArmPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
+        defineDataValue(watcher, DP_ARMOR_STAND_LEFT_ARM_POSE, toNMS(pose));
     }
 
-    private void setDWArmorStandRightArmPose(@NotNull DataWatcher watcher, @NotNull EulerAngle pose) {
-        METHOD_DM_REGISTER.invoke(watcher, DP_ARMOR_STAND_RIGHT_ARM_ROTATION, toNMS(pose));
+    private void setDWArmorStandRightArmPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
+        defineDataValue(watcher, DP_ARMOR_STAND_RIGHT_ARM_POSE, toNMS(pose));
     }
 
-    private void setDWArmorStandLeftLegPose(@NotNull DataWatcher watcher, @NotNull EulerAngle pose) {
-        METHOD_DM_REGISTER.invoke(watcher, DP_ARMOR_STAND_LEFT_LEG_ROTATION, toNMS(pose));
+    private void setDWArmorStandLeftLegPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
+        defineDataValue(watcher, DP_ARMOR_STAND_LEFT_LEG_POSE, toNMS(pose));
     }
 
-    private void setDWArmorStandRightLegPose(@NotNull DataWatcher watcher, @NotNull EulerAngle pose) {
-        METHOD_DM_REGISTER.invoke(watcher, DP_ARMOR_STAND_RIGHT_LEG_ROTATION, toNMS(pose));
+    private void setDWArmorStandRightLegPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
+        defineDataValue(watcher, DP_ARMOR_STAND_RIGHT_LEG_POSE, toNMS(pose));
+    }
+
+    private <T> void defineDataValue(@NotNull SynchedEntityData watcher, @NotNull EntityDataAccessor<T> dataValue, T value) {
+        watcher.define(dataValue, value);
+        watcher.markDirty(dataValue);
     }
 }

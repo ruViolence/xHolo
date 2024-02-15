@@ -1,5 +1,6 @@
 package ru.violence.xholo.api;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -18,8 +19,8 @@ public final class KeyedName implements CustomName {
 
     @Override
     @Contract(pure = true)
-    public @NotNull String apply(@Nullable Player player) {
-        return player != null ? RendererHelper.legacy(player, key) : Renderer.legacy(key);
+    public @NotNull Component apply(@Nullable Player player) {
+        return player != null ? RendererHelper.adventure(player, key) : Renderer.adventure(key);
     }
 
     @Contract(pure = true)
