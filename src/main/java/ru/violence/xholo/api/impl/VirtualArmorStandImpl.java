@@ -40,6 +40,7 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
         this.plugin = Check.notNull(plugin, "Plugin is null");
         this.data = Check.notNull(data, "Data is null");
         this.location = Check.notNull(location, "Location is null");
+        Check.notNull(location.getWorld(), "World is null");
         this.itemInHand = itemInHand;
         this.itemInOffHand = itemInOffHand;
         this.boots = boots;

@@ -120,10 +120,6 @@ public final class VirtualArmorStandBuilderImpl implements VirtualArmorStandBuil
 
     @Override
     public @NotNull VirtualArmorStand build() {
-        Check.notNull(data, "Data is null");
-        Check.notNull(location, "Location is null");
-        Check.notNull(location.getWorld(), "World is null");
-
         return new VirtualArmorStandImpl(
                 registry,
                 plugin,
