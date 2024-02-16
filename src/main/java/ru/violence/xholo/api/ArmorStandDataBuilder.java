@@ -14,9 +14,7 @@ public interface ArmorStandDataBuilder {
 
     @Contract(value = "_ -> new", pure = true)
     static @NotNull ArmorStandDataBuilder from(@NotNull ArmorStandData data) {
-        ArmorStandDataBuilderImpl armorStandDataBuilder = new ArmorStandDataBuilderImpl(data);
-        armorStandDataBuilder.customName(null);
-        return armorStandDataBuilder;
+        return new ArmorStandDataBuilderImpl(data);
     }
 
     @Contract(pure = true)
