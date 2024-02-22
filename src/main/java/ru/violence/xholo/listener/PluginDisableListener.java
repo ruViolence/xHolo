@@ -5,7 +5,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.Plugin;
 import ru.violence.xholo.XHoloPlugin;
-import ru.violence.xholo.api.VirtualArmorStand;
+import ru.violence.xholo.api.VirtualEntity;
 
 public class PluginDisableListener implements Listener {
     private final XHoloPlugin plugin;
@@ -18,10 +18,10 @@ public class PluginDisableListener implements Listener {
     public void onPluginDisable(PluginDisableEvent event) {
         Plugin plugin = event.getPlugin();
 
-        for (VirtualArmorStand vas : this.plugin.getRegistry().getAll()) {
-            if (plugin.equals(vas.getPlugin())) {
-                vas.manager().setAutoUpdate(true);
-                vas.manager().unregister();
+        for (VirtualEntity ve : this.plugin.getRegistry().getAll()) {
+            if (plugin.equals(ve.getPlugin())) {
+                ve.manager().setAutoUpdate(true);
+                ve.manager().unregister();
             }
         }
     }

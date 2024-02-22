@@ -1,23 +1,24 @@
 package ru.violence.xholo;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.violence.coreapi.common.api.reflection.ReflectionUtil;
-import ru.violence.xholo.api.VirtualArmorStand;
-import ru.violence.xholo.api.XHolo;
-import ru.violence.xholo.api.registry.HologramRegistry;
+import ru.violence.xholo.api.VirtualEntity;
 import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
 import ru.violence.xholo.listener.PlayerHideListener;
 import ru.violence.xholo.listener.PluginDisableListener;
 import ru.violence.xholo.task.VisibilityUpdateTask;
 
 public class XHoloPlugin extends JavaPlugin {
-    private HologramRegistry registry;
+    private static XHoloPlugin INSTANCE;
+    private HologramRegistryImpl registry;
+
+    public static XHoloPlugin getInstance() {
+        return INSTANCE;
+    }
 
     @Override
     public void onEnable() {
+        INSTANCE = this;
         this.registry = new HologramRegistryImpl(this);
-
-        ReflectionUtil.setFieldValue(XHolo.class, null, "registry", registry);
 
         getServer().getPluginManager().registerEvents(new PlayerHideListener(this), this);
         getServer().getPluginManager().registerEvents(new PluginDisableListener(this), this);
@@ -26,14 +27,14 @@ public class XHoloPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        for (VirtualArmorStand vas : this.registry.getAll()) {
-            vas.manager().unregister();
+        for (VirtualEntity ve : this.registry.getAll()) {
+            ve.manager().unregister();
         }
 
-        ReflectionUtil.setFieldValue(XHolo.class, null, "registry", null);
+        INSTANCE = null;
     }
 
-    public HologramRegistry getRegistry() {
+    public HologramRegistryImpl getRegistry() {
         return this.registry;
     }
 }

@@ -9,7 +9,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.violence.xholo.XHoloPlugin;
-import ru.violence.xholo.api.VirtualArmorStand;
+import ru.violence.xholo.api.VirtualEntity;
 
 import java.util.List;
 
@@ -31,12 +31,12 @@ public class PlayerHideListener implements Listener {
     }
 
     private void hideAll(@NotNull Player player, @Nullable World world) {
-        List<VirtualArmorStand> armorStands = world == null
+        List<VirtualEntity> virtualEntities = world == null
                 ? plugin.getRegistry().getAll()
                 : plugin.getRegistry().getAllFrom(world);
 
-        for (VirtualArmorStand vas : armorStands) {
-            vas.manager().hide(player);
+        for (VirtualEntity ve : virtualEntities) {
+            ve.manager().hide(player);
         }
     }
 }

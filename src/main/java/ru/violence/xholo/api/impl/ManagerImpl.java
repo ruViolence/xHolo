@@ -9,54 +9,74 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 import ru.violence.coreapi.common.api.util.Check;
+import ru.violence.xholo.XHoloPlugin;
 import ru.violence.xholo.api.ArmorStandData;
+import ru.violence.xholo.api.BlockDisplayData;
+import ru.violence.xholo.api.ItemDisplayData;
 import ru.violence.xholo.api.Manager;
-import ru.violence.xholo.util.UpdateFlag;
+import ru.violence.xholo.api.TextDisplayData;
+import ru.violence.xholo.api.VirtualArmorStand;
+import ru.violence.xholo.api.VirtualBlockDisplay;
+import ru.violence.xholo.api.VirtualEntity;
+import ru.violence.xholo.api.VirtualItemDisplay;
+import ru.violence.xholo.api.VirtualTextDisplay;
 import ru.violence.xholo.util.Utils;
 import ru.violence.xholo.util.nms.NMSUtil;
+import ru.violence.xholo.util.updateflags.UpdateFlag;
 
 import java.util.AbstractMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
 public final class ManagerImpl implements Manager {
-    private final VirtualArmorStandImpl vas;
+    private final VirtualEntity virtualEntity;
     private final @NotNull Set<Player> viewers = new HashSet<>();
     private int displayRange = DEFAULT_DISPLAY_RANGE;
     private @Nullable Predicate<Player> canSeeFilter;
     private boolean registered;
     private boolean autoUpdate = true;
 
-    public ManagerImpl(VirtualArmorStandImpl vas) {
-        this.vas = vas;
+    public ManagerImpl(VirtualEntity virtualEntity) {
+        this.virtualEntity = virtualEntity;
     }
 
     @Override
     public boolean isShown(@NotNull Player player) {
         Check.notNull(player, "Player is null");
-        synchronized (vas) {
+        synchronized (virtualEntity) {
             return viewers.contains(player);
         }
     }
 
     @Override
     public boolean show(@NotNull Player player) {
-        synchronized (vas) {
+        synchronized (virtualEntity) {
             if (isShown(player)) return false;
 
             viewers.add(player);
 
-            int entityId = vas.getEntityId();
+            int entityId = virtualEntity.getEntityId();
 
-            NMSUtil.spawnEntityArmorStand(player, entityId, vas.getLocation(), vas.getData(),
-                    vas.getItemInHand(),
-                    vas.getItemInOffHand(),
-                    vas.getHelmet(),
-                    vas.getChestplate(),
-                    vas.getLeggings(),
-                    vas.getBoots());
+            if (virtualEntity instanceof VirtualArmorStand vas) {
+                NMSUtil.spawnEntityArmorStand(player, entityId, vas.getLocation(), vas.getData(),
+                        vas.getItemInHand(),
+                        vas.getItemInOffHand(),
+                        vas.getHelmet(),
+                        vas.getChestplate(),
+                        vas.getLeggings(),
+                        vas.getBoots());
+            } else if (virtualEntity instanceof VirtualBlockDisplay vbd) {
+                NMSUtil.spawnEntityBlockDisplay(player, entityId, vbd.getLocation(), vbd.getData());
+            } else if (virtualEntity instanceof VirtualItemDisplay vid) {
+                NMSUtil.spawnEntityItemDisplay(player, entityId, vid.getLocation(), vid.getData());
+            } else if (virtualEntity instanceof VirtualTextDisplay vbd) {
+                NMSUtil.spawnEntityTextDisplay(player, entityId, vbd.getLocation(), vbd.getData());
+            } else {
+                throw new IllegalStateException("Unknown entity type: " + virtualEntity.getClass().getSimpleName());
+            }
 
             return true;
         }
@@ -68,20 +88,20 @@ public final class ManagerImpl implements Manager {
     }
 
     public boolean hide(@NotNull Player player, boolean sendPacket) {
-        synchronized (vas) {
+        synchronized (virtualEntity) {
             if (!isShown(player)) return false;
 
             viewers.remove(player);
-            if (sendPacket) NMSUtil.destroyEntities(player, vas.getEntityId());
+            if (sendPacket) NMSUtil.destroyEntities(player, virtualEntity.getEntityId());
 
             return true;
         }
     }
 
     public void hideAll() {
-        synchronized (vas) {
+        synchronized (virtualEntity) {
             for (Player player : viewers) {
-                NMSUtil.destroyEntities(player, vas.getEntityId());
+                NMSUtil.destroyEntities(player, virtualEntity.getEntityId());
             }
 
             viewers.clear();
@@ -121,14 +141,14 @@ public final class ManagerImpl implements Manager {
 
     @Override
     public int getViewersAmount() {
-        synchronized (vas) {
+        synchronized (virtualEntity) {
             return viewers.size();
         }
     }
 
     @Override
     public @NotNull Set<Player> getViewers() {
-        synchronized (vas) {
+        synchronized (virtualEntity) {
             return new HashSet<>(viewers);
         }
     }
@@ -140,9 +160,9 @@ public final class ManagerImpl implements Manager {
 
     @Override
     public void register() {
-        synchronized (vas) {
+        synchronized (virtualEntity) {
             if (registered) return;
-            vas.getRegistry().register(vas);
+            XHoloPlugin.getInstance().getRegistry().register(virtualEntity);
             registered = true;
 
             updateVisibility();
@@ -151,9 +171,9 @@ public final class ManagerImpl implements Manager {
 
     @Override
     public void unregister() {
-        synchronized (vas) {
+        synchronized (virtualEntity) {
             if (!registered) return;
-            vas.getRegistry().unregister(vas);
+            XHoloPlugin.getInstance().getRegistry().unregister(virtualEntity);
             registered = false;
 
             if (autoUpdate) hideAll();
@@ -164,15 +184,15 @@ public final class ManagerImpl implements Manager {
         if (!registered) return;
         if (!autoUpdate) return;
 
-        synchronized (vas) {
-            Location vasLoc = vas.getLocation();
-            World world = vasLoc.getWorld();
+        synchronized (virtualEntity) {
+            Location veLoc = virtualEntity.getLocation();
+            World world = veLoc.getWorld();
 
             for (Player player : world.getPlayers()) {
                 if (player.isDead()) continue;
                 if (!NMSUtil.isRealPlayer(player)) continue;
 
-                boolean isInRange = Utils.isInDisplayRange(player, vasLoc, getDisplayRange());
+                boolean isInRange = Utils.isInDisplayRange(player, veLoc, getDisplayRange());
 
                 if (isInRange) {
                     if (!isShown(player)) {
@@ -188,20 +208,43 @@ public final class ManagerImpl implements Manager {
         }
     }
 
-    void updateData(UpdateFlag @Nullable [] flags) {
-        synchronized (vas) {
-            int entityId = vas.getEntityId();
-            ArmorStandData data = vas.getData();
+    void updateData(@NotNull List<UpdateFlag<?>> flags) {
+        synchronized (virtualEntity) {
+            int entityId = virtualEntity.getEntityId();
 
-            for (Player player : viewers) {
-                NMSUtil.updateMetadata(player, entityId, data, flags);
+            if (virtualEntity instanceof VirtualArmorStandImpl vas) {
+                ArmorStandData data = vas.getData();
+
+                for (Player player : viewers) {
+                    NMSUtil.updateArmorStandMetadata(player, entityId, data, flags);
+                }
+            } else if (virtualEntity instanceof VirtualBlockDisplayImpl vbd) {
+                BlockDisplayData data = vbd.getData();
+
+                for (Player player : viewers) {
+                    NMSUtil.updateBlockDisplayMetadata(player, entityId, data, flags);
+                }
+            } else if (virtualEntity instanceof VirtualItemDisplayImpl vid) {
+                ItemDisplayData data = vid.getData();
+
+                for (Player player : viewers) {
+                    NMSUtil.updateItemDisplayMetadata(player, entityId, data, flags);
+                }
+            } else if (virtualEntity instanceof VirtualTextDisplayImpl vtd) {
+                TextDisplayData data = vtd.getData();
+
+                for (Player player : viewers) {
+                    NMSUtil.updateTextDisplayMetadata(player, entityId, data, flags);
+                }
+            } else {
+                throw new IllegalStateException("Unknown entity type: " + virtualEntity.getClass().getSimpleName());
             }
         }
     }
 
     void updateEquipment(@NotNull EquipmentSlot slot, @Nullable ItemStack item) {
-        synchronized (vas) {
-            int entityId = vas.getEntityId();
+        synchronized (virtualEntity) {
+            int entityId = virtualEntity.getEntityId();
 
             for (Player player : viewers) {
                 NMSUtil.sendEquipment(player, entityId, new Map.Entry[]{new AbstractMap.SimpleEntry<>(slot, item)}, false);
@@ -210,11 +253,11 @@ public final class ManagerImpl implements Manager {
     }
 
     void updateLocation() {
-        synchronized (vas) {
+        synchronized (virtualEntity) {
             updateVisibility();
 
-            int entityId = vas.getEntityId();
-            Location location = vas.getLocation();
+            int entityId = virtualEntity.getEntityId();
+            Location location = virtualEntity.getLocation();
 
             for (Player player : viewers) {
                 NMSUtil.teleportEntity(player, entityId, location);

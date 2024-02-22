@@ -9,7 +9,7 @@ import ru.violence.xholo.api.ArmorStandDataBuilder;
 import ru.violence.xholo.api.CustomName;
 
 @Getter
-public final class ArmorStandDataImpl implements ArmorStandData {
+public final class ArmorStandDataImpl extends VirtualEntityDataImpl implements ArmorStandData {
     private final @Nullable CustomName customName;
     private final @Nullable EulerAngle bodyPose;
     private final @Nullable EulerAngle leftArmPose;
@@ -18,12 +18,13 @@ public final class ArmorStandDataImpl implements ArmorStandData {
     private final @Nullable EulerAngle rightLegPose;
     private final @Nullable EulerAngle headPose;
     private final boolean hasBasePlate;
-    private final boolean visible;
     private final boolean hasArms;
     private final boolean small;
     private final boolean marker;
 
-    public ArmorStandDataImpl(@Nullable CustomName customName,
+    public ArmorStandDataImpl(boolean visible,
+                              boolean glowing,
+                              @Nullable CustomName customName,
                               @Nullable EulerAngle bodyPose,
                               @Nullable EulerAngle leftArmPose,
                               @Nullable EulerAngle rightArmPose,
@@ -31,10 +32,10 @@ public final class ArmorStandDataImpl implements ArmorStandData {
                               @Nullable EulerAngle rightLegPose,
                               @Nullable EulerAngle headPose,
                               boolean hasBasePlate,
-                              boolean visible,
                               boolean hasArms,
                               boolean small,
                               boolean marker) {
+        super(visible, glowing);
         this.customName = customName;
         this.bodyPose = bodyPose;
         this.leftArmPose = leftArmPose;
@@ -43,7 +44,6 @@ public final class ArmorStandDataImpl implements ArmorStandData {
         this.rightLegPose = rightLegPose;
         this.headPose = headPose;
         this.hasBasePlate = hasBasePlate;
-        this.visible = visible;
         this.hasArms = hasArms;
         this.small = small;
         this.marker = marker;

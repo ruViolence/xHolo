@@ -11,8 +11,11 @@ import ru.violence.xholo.api.ArmorStandData;
 import ru.violence.xholo.api.Manager;
 import ru.violence.xholo.api.VirtualArmorStand;
 import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
-import ru.violence.xholo.util.UpdateFlag;
 import ru.violence.xholo.util.nms.NMSUtil;
+import ru.violence.xholo.util.updateflags.UpdateFlag;
+import ru.violence.xholo.util.updateflags.UpdateFlags;
+
+import java.util.List;
 
 public final class VirtualArmorStandImpl implements VirtualArmorStand {
     private final int id = NMSUtil.getNextEntityId();
@@ -20,6 +23,7 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
     private final ManagerImpl manager;
 
     private final @NotNull Plugin plugin;
+    private @NotNull Location location;
     private @NotNull ArmorStandData data;
     private @Nullable ItemStack itemInHand;
     private @Nullable ItemStack itemInOffHand;
@@ -27,9 +31,8 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
     private @Nullable ItemStack leggings;
     private @Nullable ItemStack chestplate;
     private @Nullable ItemStack helmet;
-    private @NotNull Location location;
 
-    public VirtualArmorStandImpl(@NotNull HologramRegistryImpl registry, @NotNull Plugin plugin, @NotNull ArmorStandData data, @NotNull Location location,
+    public VirtualArmorStandImpl(@NotNull HologramRegistryImpl registry, @NotNull Plugin plugin, @NotNull Location location, @NotNull ArmorStandData data,
                                  @Nullable ItemStack itemInHand,
                                  @Nullable ItemStack itemInOffHand,
                                  @Nullable ItemStack boots,
@@ -38,8 +41,8 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
                                  @Nullable ItemStack helmet) {
         this.registry = Check.notNull(registry, "Registry is null");
         this.plugin = Check.notNull(plugin, "Plugin is null");
-        this.data = Check.notNull(data, "Data is null");
         this.location = Check.notNull(location, "Location is null");
+        this.data = Check.notNull(data, "Data is null");
         Check.notNull(location.getWorld(), "World is null");
         this.itemInHand = itemInHand;
         this.itemInOffHand = itemInOffHand;
@@ -47,7 +50,6 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
         this.leggings = leggings;
         this.chestplate = chestplate;
         this.helmet = helmet;
-        Check.notNull(location.getWorld(), "World is null");
         this.manager = new ManagerImpl(this);
     }
 
@@ -59,6 +61,26 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
     @Override
     public int getEntityId() {
         return id;
+    }
+
+    @Override
+    public @NotNull Location getLocation() {
+        return location;
+    }
+
+    @Override
+    public void setLocation(@NotNull Location location) {
+        Check.notNull(location, "Location is null");
+        Check.notNull(location.getWorld(), "World is null");
+        synchronized (this) {
+            this.location = location;
+            manager.updateLocation();
+        }
+    }
+
+    @Override
+    public @NotNull Manager manager() {
+        return manager;
     }
 
     @Override
@@ -75,8 +97,8 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
             this.data = data;
 
             if (manager.getViewersAmount() != 0) {
-                UpdateFlag[] flags = UpdateFlag.compareUpdated(old, data);
-                if (flags.length == 0) return;
+                List<UpdateFlag<?>> flags = UpdateFlags.compareArmorStandData(old, data);
+                if (flags.isEmpty()) return;
 
                 manager.updateData(flags);
             }
@@ -159,26 +181,6 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
             this.helmet = item;
             manager.updateEquipment(EquipmentSlot.HEAD, item);
         }
-    }
-
-    @Override
-    public @NotNull Location getLocation() {
-        return location;
-    }
-
-    @Override
-    public void setLocation(@NotNull Location location) {
-        Check.notNull(location, "Location is null");
-        Check.notNull(location.getWorld(), "World is null");
-        synchronized (this) {
-            this.location = location;
-            manager.updateLocation();
-        }
-    }
-
-    @Override
-    public @NotNull Manager manager() {
-        return manager;
     }
 
     @NotNull HologramRegistryImpl getRegistry() {

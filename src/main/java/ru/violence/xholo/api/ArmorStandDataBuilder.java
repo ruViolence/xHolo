@@ -18,6 +18,18 @@ public interface ArmorStandDataBuilder {
     }
 
     @Contract(pure = true)
+    boolean visible();
+
+    @Contract(value = "_ -> this")
+    @NotNull ArmorStandDataBuilder visible(boolean visible);
+
+    @Contract(pure = true)
+    boolean glowing();
+
+    @Contract(value = "_ -> this")
+    @NotNull ArmorStandDataBuilder glowing(boolean glowing);
+
+    @Contract(pure = true)
     @Nullable CustomName customName();
 
     @Contract(value = "_ -> this")
@@ -64,12 +76,6 @@ public interface ArmorStandDataBuilder {
 
     @Contract(value = "_ -> this")
     @NotNull ArmorStandDataBuilder hasBasePlate(boolean hasBasePlate);
-
-    @Contract(pure = true)
-    boolean visible();
-
-    @Contract(value = "_ -> this")
-    @NotNull ArmorStandDataBuilder visible(boolean visible);
 
     @Contract(pure = true)
     boolean hasArms();

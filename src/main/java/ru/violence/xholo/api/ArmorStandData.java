@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface ArmorStandData {
+public interface ArmorStandData extends VirtualEntityData {
     @Contract(pure = true)
     @Nullable CustomName getCustomName();
 
@@ -29,9 +29,6 @@ public interface ArmorStandData {
 
     @Contract(pure = true)
     boolean isHasBasePlate();
-
-    @Contract(pure = true)
-    boolean isVisible();
 
     @Contract(pure = true)
     boolean isHasArms();

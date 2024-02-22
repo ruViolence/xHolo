@@ -4,7 +4,7 @@ import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.XHoloPlugin;
-import ru.violence.xholo.api.VirtualArmorStand;
+import ru.violence.xholo.api.VirtualEntity;
 import ru.violence.xholo.api.registry.HologramRegistry;
 
 import java.util.ArrayList;
@@ -16,36 +16,36 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public final class HologramRegistryImpl implements HologramRegistry {
     private final XHoloPlugin plugin;
-    private final Set<VirtualArmorStand> armorStands = new HashSet<>();
+    private final Set<VirtualEntity> virtualEntities = new HashSet<>();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public HologramRegistryImpl(XHoloPlugin plugin) {
         this.plugin = plugin;
     }
 
-    public void register(@NotNull VirtualArmorStand vas) {
-        Check.notNull(vas, "VAS is null");
+    public void register(@NotNull VirtualEntity ve) {
+        Check.notNull(ve, "VirtualEntity is null");
         lock.writeLock().lock();
-        armorStands.add(vas);
+        virtualEntities.add(ve);
         lock.writeLock().unlock();
     }
 
-    public void unregister(@NotNull VirtualArmorStand vas) {
-        Check.notNull(vas, "VAS is null");
+    public void unregister(@NotNull VirtualEntity ve) {
+        Check.notNull(ve, "VirtualEntity is null");
         lock.writeLock().lock();
-        armorStands.remove(vas);
+        virtualEntities.remove(ve);
         lock.writeLock().unlock();
     }
 
     @Override
-    public @NotNull List<VirtualArmorStand> getAllFrom(@NotNull World world) {
+    public @NotNull List<VirtualEntity> getAllFrom(@NotNull World world) {
         Check.notNull(world, "World is null");
-        List<VirtualArmorStand> list = new ArrayList<>();
+        List<VirtualEntity> list = new ArrayList<>();
 
         lock.readLock().lock();
-        for (VirtualArmorStand vas : armorStands) {
-            if (vas.getLocation().getWorld().equals(world)) {
-                list.add(vas);
+        for (VirtualEntity ve : virtualEntities) {
+            if (ve.getLocation().getWorld().equals(world)) {
+                list.add(ve);
             }
         }
         lock.readLock().unlock();
@@ -54,9 +54,9 @@ public final class HologramRegistryImpl implements HologramRegistry {
     }
 
     @Override
-    public @NotNull List<VirtualArmorStand> getAll() {
+    public @NotNull List<VirtualEntity> getAll() {
         lock.readLock().lock();
-        List<VirtualArmorStand> list = new ArrayList<>(armorStands);
+        List<VirtualEntity> list = new ArrayList<>(virtualEntities);
         lock.readLock().unlock();
 
         return list;

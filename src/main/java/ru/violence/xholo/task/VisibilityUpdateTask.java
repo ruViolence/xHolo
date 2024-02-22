@@ -2,7 +2,7 @@ package ru.violence.xholo.task;
 
 import org.bukkit.scheduler.BukkitRunnable;
 import ru.violence.xholo.XHoloPlugin;
-import ru.violence.xholo.api.VirtualArmorStand;
+import ru.violence.xholo.api.VirtualEntity;
 import ru.violence.xholo.api.impl.ManagerImpl;
 
 public class VisibilityUpdateTask extends BukkitRunnable {
@@ -14,8 +14,8 @@ public class VisibilityUpdateTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        for (VirtualArmorStand vas : plugin.getRegistry().getAll()) {
-            ManagerImpl manager = (ManagerImpl) vas.manager();
+        for (VirtualEntity ve : plugin.getRegistry().getAll()) {
+            ManagerImpl manager = (ManagerImpl) ve.manager();
             manager.updateVisibility();
         }
     }

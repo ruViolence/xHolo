@@ -9,6 +9,8 @@ import ru.violence.xholo.api.ArmorStandDataBuilder;
 import ru.violence.xholo.api.CustomName;
 
 public final class ArmorStandDataBuilderImpl implements ArmorStandDataBuilder {
+    private boolean visible;
+    private boolean glowing;
     private @Nullable CustomName customName;
     private @Nullable EulerAngle bodyPose;
     private @Nullable EulerAngle leftArmPose;
@@ -17,7 +19,6 @@ public final class ArmorStandDataBuilderImpl implements ArmorStandDataBuilder {
     private @Nullable EulerAngle rightLegPose;
     private @Nullable EulerAngle headPose;
     private boolean hasBasePlate;
-    private boolean visible;
     private boolean hasArms;
     private boolean small;
     private boolean marker;
@@ -28,6 +29,8 @@ public final class ArmorStandDataBuilderImpl implements ArmorStandDataBuilder {
 
     public ArmorStandDataBuilderImpl(@NotNull ArmorStandData data) {
         Check.notNull(data, "Data is null");
+        this.visible = data.isVisible();
+        this.glowing = data.isGlowing();
         this.customName = data.getCustomName();
         this.bodyPose = data.getBodyPose();
         this.leftArmPose = data.getLeftArmPose();
@@ -36,10 +39,31 @@ public final class ArmorStandDataBuilderImpl implements ArmorStandDataBuilder {
         this.rightLegPose = data.getRightLegPose();
         this.headPose = data.getHeadPose();
         this.hasBasePlate = data.isHasBasePlate();
-        this.visible = data.isVisible();
         this.hasArms = data.isHasArms();
         this.small = data.isSmall();
         this.marker = data.isMarker();
+    }
+
+    @Override
+    public boolean visible() {
+        return visible;
+    }
+
+    @Override
+    public @NotNull ArmorStandDataBuilder visible(boolean visible) {
+        this.visible = visible;
+        return this;
+    }
+
+    @Override
+    public boolean glowing() {
+        return glowing;
+    }
+
+    @Override
+    public @NotNull ArmorStandDataBuilder glowing(boolean glowing) {
+        this.glowing = glowing;
+        return this;
     }
 
     @Override
@@ -131,17 +155,6 @@ public final class ArmorStandDataBuilderImpl implements ArmorStandDataBuilder {
     }
 
     @Override
-    public boolean visible() {
-        return visible;
-    }
-
-    @Override
-    public @NotNull ArmorStandDataBuilder visible(boolean visible) {
-        this.visible = visible;
-        return this;
-    }
-
-    @Override
     public boolean hasArms() {
         return hasArms;
     }
@@ -177,6 +190,8 @@ public final class ArmorStandDataBuilderImpl implements ArmorStandDataBuilder {
     @Override
     public @NotNull ArmorStandData build() {
         return new ArmorStandDataImpl(
+                visible,
+                glowing,
                 customName,
                 bodyPose,
                 leftArmPose,
@@ -185,7 +200,6 @@ public final class ArmorStandDataBuilderImpl implements ArmorStandDataBuilder {
                 rightLegPose,
                 headPose,
                 hasBasePlate,
-                visible,
                 hasArms,
                 small,
                 marker

@@ -2,6 +2,7 @@ package ru.violence.xholo.util.nms;
 
 import com.mojang.datafixers.util.Pair;
 import io.netty.buffer.Unpooled;
+import io.papermc.paper.adventure.PaperAdventure;
 import lombok.experimental.UtilityClass;
 import net.minecraft.core.Rotations;
 import net.minecraft.network.FriendlyByteBuf;
@@ -16,26 +17,37 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_20_R3.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.EulerAngle;
+import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import ru.violence.coreapi.common.api.reflection.ReflectMethod;
 import ru.violence.coreapi.common.api.reflection.ReflectionUtil;
 import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ArmorStandData;
-import ru.violence.xholo.util.UpdateFlag;
+import ru.violence.xholo.api.BlockDisplayData;
+import ru.violence.xholo.api.ItemDisplayData;
+import ru.violence.xholo.api.TextDisplayData;
+import ru.violence.xholo.util.updateflags.UpdateFlag;
+import ru.violence.xholo.util.updateflags.UpdateFlags;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -61,6 +73,32 @@ public class NMSUtil {
     private final EntityDataAccessor<Rotations> DP_ARMOR_STAND_LEFT_LEG_POSE = ArmorStand.DATA_LEFT_LEG_POSE;
     private final EntityDataAccessor<Rotations> DP_ARMOR_STAND_RIGHT_LEG_POSE = ArmorStand.DATA_RIGHT_LEG_POSE;
 
+    private final EntityDataAccessor<Integer> DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS = ReflectionUtil.getFieldValue(Display.class, null, "q");
+    private final EntityDataAccessor<Integer> DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION = ReflectionUtil.getFieldValue(Display.class, null, "r");
+    private final EntityDataAccessor<Integer> DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION = Display.DATA_POS_ROT_INTERPOLATION_DURATION_ID;
+    private final EntityDataAccessor<Vector3f> DP_DISPLAY_TRANSLATION = ReflectionUtil.getFieldValue(Display.class, null, "t");
+    private final EntityDataAccessor<Quaternionf> DP_DISPLAY_LEFT_ROTATION = ReflectionUtil.getFieldValue(Display.class, null, "v");
+    private final EntityDataAccessor<Vector3f> DP_DISPLAY_SCALE = ReflectionUtil.getFieldValue(Display.class, null, "u");
+    private final EntityDataAccessor<Quaternionf> DP_DISPLAY_RIGHT_ROTATION = ReflectionUtil.getFieldValue(Display.class, null, "aE");
+    private final EntityDataAccessor<Byte> DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS = ReflectionUtil.getFieldValue(Display.class, null, "aF");
+    private final EntityDataAccessor<Integer> DP_DISPLAY_BRIGHTNESS_OVERRIDE = ReflectionUtil.getFieldValue(Display.class, null, "aG");
+    private final EntityDataAccessor<Float> DP_DISPLAY_SHADOW_RADIUS = ReflectionUtil.getFieldValue(Display.class, null, "aI");
+    private final EntityDataAccessor<Float> DP_DISPLAY_SHADOW_STRENGTH = ReflectionUtil.getFieldValue(Display.class, null, "aJ");
+    private final EntityDataAccessor<Float> DP_DISPLAY_WIDTH = ReflectionUtil.getFieldValue(Display.class, null, "aK");
+    private final EntityDataAccessor<Float> DP_DISPLAY_HEIGHT = ReflectionUtil.getFieldValue(Display.class, null, "aL");
+    private final EntityDataAccessor<Integer> DP_DISPLAY_GLOW_COLOR_OVERRIDE = ReflectionUtil.getFieldValue(Display.class, null, "aM");
+
+    private final EntityDataAccessor<BlockState> DP_BLOCK_DISPLAY_BLOCK = ReflectionUtil.getFieldValue(Display.BlockDisplay.class, null, "q");
+
+    private final EntityDataAccessor<net.minecraft.world.item.ItemStack> DP_ITEM_DISPLAY_ITEM = ReflectionUtil.getFieldValue(Display.ItemDisplay.class, null, "r");
+    private final EntityDataAccessor<Byte> DP_ITEM_DISPLAY_TRANSFORM = ReflectionUtil.getFieldValue(Display.ItemDisplay.class, null, "s");
+
+    private final EntityDataAccessor<Component> DP_TEXT_DISPLAY_TEXT = ReflectionUtil.getFieldValue(Display.TextDisplay.class, null, "aM");
+    private final EntityDataAccessor<Integer> DP_TEXT_DISPLAY_LINE_WIDTH = Display.TextDisplay.DATA_LINE_WIDTH_ID;
+    private final EntityDataAccessor<Integer> DP_TEXT_DISPLAY_BACKGROUND_COLOR = Display.TextDisplay.DATA_BACKGROUND_COLOR_ID;
+    private final EntityDataAccessor<Byte> DP_TEXT_DISPLAY_OPACITY = ReflectionUtil.getFieldValue(Display.TextDisplay.class, null, "aP");
+    private final EntityDataAccessor<Byte> DP_TEXT_DISPLAY_STYLE_FLAGS = ReflectionUtil.getFieldValue(Display.TextDisplay.class, null, "aQ");
+
     private final ReflectMethod<Integer> METHOD_TRACKEDENTITY_GETEFFECTIVERANGE = new ReflectMethod<>(ChunkMap.TrackedEntity.class, "b", (Class<?>[]) null);
 
     public boolean isRealPlayer(@NotNull Player player) {
@@ -78,8 +116,8 @@ public class NMSUtil {
                                       @Nullable ItemStack chestItem,
                                       @Nullable ItemStack legsItem,
                                       @Nullable ItemStack feetItem) {
-        spawnEntityLiving(player, location, entityId);
-        updateMetadata(player, entityId, data, null);
+        spawnEntityLiving(player, location, entityId, EntityType.ARMOR_STAND);
+        updateArmorStandMetadata(player, entityId, data, null);
 
         sendEquipment(player, entityId, new Map.Entry[]{
                 new AbstractMap.SimpleEntry<>(EquipmentSlot.HAND, mainHandItem),
@@ -91,7 +129,22 @@ public class NMSUtil {
         }, true);
     }
 
-    public void spawnEntityLiving(@NotNull Player player, @NotNull Location location, int entityId) {
+    public void spawnEntityBlockDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull BlockDisplayData data) {
+        spawnEntityLiving(player, location, entityId, EntityType.BLOCK_DISPLAY);
+        updateBlockDisplayMetadata(player, entityId, data, null);
+    }
+
+    public void spawnEntityItemDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ItemDisplayData data) {
+        spawnEntityLiving(player, location, entityId, EntityType.ITEM_DISPLAY);
+        updateItemDisplayMetadata(player, entityId, data, null);
+    }
+
+    public void spawnEntityTextDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull TextDisplayData data) {
+        spawnEntityLiving(player, location, entityId, EntityType.TEXT_DISPLAY);
+        updateTextDisplayMetadata(player, entityId, data, null);
+    }
+
+    public void spawnEntityLiving(@NotNull Player player, @NotNull Location location, int entityId, @NotNull EntityType<?> type) {
         ClientboundAddEntityPacket packet = new ClientboundAddEntityPacket(
                 entityId,
                 UUID.randomUUID(),
@@ -100,7 +153,7 @@ public class NMSUtil {
                 location.getZ(),
                 location.getPitch(),
                 location.getYaw(),
-                EntityType.ARMOR_STAND,
+                type,
                 0,
                 Vec3.ZERO,
                 location.getYaw()
@@ -126,10 +179,37 @@ public class NMSUtil {
         }
     }
 
-    public void updateMetadata(@NotNull Player player, int entityId, @NotNull ArmorStandData data, UpdateFlag @Nullable [] flags) {
-        SynchedEntityData watcher = flags == null || flags.length == 0
-                ? createDataWatcher(player, data)
-                : createDataWatcher(player, data, flags);
+    public void updateArmorStandMetadata(@NotNull Player player, int entityId, @NotNull ArmorStandData data, @Nullable List<UpdateFlag<?>> flags) {
+        SynchedEntityData watcher = flags == null || flags.isEmpty()
+                ? createArmorStandDataWatcher(player, data)
+                : createArmorStandDataWatcher(player, data, flags);
+
+        List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
+        sendPacket(player, new ClientboundSetEntityDataPacket(entityId, dataValues));
+    }
+
+    public void updateBlockDisplayMetadata(@NotNull Player player, int entityId, @NotNull BlockDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+        SynchedEntityData watcher = flags == null || flags.isEmpty()
+                ? createBlockDisplayDataWatcher(data)
+                : createBlockDisplayDataWatcher(data, flags);
+
+        List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
+        sendPacket(player, new ClientboundSetEntityDataPacket(entityId, dataValues));
+    }
+
+    public void updateItemDisplayMetadata(@NotNull Player player, int entityId, @NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+        SynchedEntityData watcher = flags == null || flags.isEmpty()
+                ? createItemDisplayDataWatcher(data)
+                : createItemDisplayDataWatcher(data, flags);
+
+        List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
+        sendPacket(player, new ClientboundSetEntityDataPacket(entityId, dataValues));
+    }
+
+    public void updateTextDisplayMetadata(@NotNull Player player, int entityId, @NotNull TextDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+        SynchedEntityData watcher = flags == null || flags.isEmpty()
+                ? createTextDisplayDataWatcher(player, data)
+                : createTextDisplayDataWatcher(player, data, flags);
 
         List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
         sendPacket(player, new ClientboundSetEntityDataPacket(entityId, dataValues));
@@ -164,11 +244,11 @@ public class NMSUtil {
     }
 
     @Contract(pure = true)
-    private @NotNull SynchedEntityData createDataWatcher(@NotNull Player player, @NotNull ArmorStandData data) {
+    private @NotNull SynchedEntityData createArmorStandDataWatcher(@NotNull Player player, @NotNull ArmorStandData data) {
         SynchedEntityData watcher = new SynchedEntityData(null);
 
         // Set entity flags
-        setDWEntityFlags(watcher, !data.isVisible());
+        setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
 
         // Set custom name
         setDWCustomName(watcher, data.getCustomName() != null ? data.getCustomName().apply(player) : null);
@@ -188,44 +268,351 @@ public class NMSUtil {
     }
 
     @Contract(pure = true)
-    public @NotNull SynchedEntityData createDataWatcher(@NotNull Player player, @NotNull ArmorStandData data, UpdateFlag @Nullable [] flags) {
-        if (flags == null || flags.length == 0) return createDataWatcher(player, data);
+    public @NotNull SynchedEntityData createArmorStandDataWatcher(@NotNull Player player, @NotNull ArmorStandData data, @Nullable List<UpdateFlag<?>> flags) {
+        if (flags == null || flags.isEmpty()) return createArmorStandDataWatcher(player, data);
 
         SynchedEntityData watcher = new SynchedEntityData(null);
 
-        for (UpdateFlag flag : flags) {
-            switch (flag) {
-                case STATUS:
-                    setDWArmorStandClientFlags(watcher, data.isSmall(), data.isHasArms(), !data.isHasBasePlate(), data.isMarker());
-                    break;
-                case FLAGS:
-                    setDWEntityFlags(watcher, !data.isVisible());
-                    break;
-                case CUSTOM_NAME:
-                    setDWCustomName(watcher, data.getCustomName() != null ? data.getCustomName().apply(player) : null);
-                    break;
-                case BODY_POSE:
-                    if (data.getBodyPose() != null) setDWArmorStandBodyPose(watcher, data.getBodyPose());
-                    break;
-                case LEFT_ARM_POSE:
-                    if (data.getLeftArmPose() != null) setDWArmorStandLeftArmPose(watcher, data.getLeftArmPose());
-                    break;
-                case RIGHT_ARM_POSE:
-                    if (data.getRightArmPose() != null) setDWArmorStandRightArmPose(watcher, data.getRightArmPose());
-                    break;
-                case LEFT_LEG_POSE:
-                    if (data.getLeftLegPose() != null) setDWArmorStandLeftLegPose(watcher, data.getLeftLegPose());
-                    break;
-                case RIGHT_LEG_POSE:
-                    if (data.getRightLegPose() != null) setDWArmorStandRightLegPose(watcher, data.getRightLegPose());
-                    break;
-                case HEAD_POSE:
-                    if (data.getHeadPose() != null) setDWArmorStandHeadPose(watcher, data.getHeadPose());
-                    break;
+        for (UpdateFlag<?> flag : flags) {
+            if (flag.equals(UpdateFlags.ARMOR_STAND_STATUS)) {
+                setDWArmorStandClientFlags(watcher, data.isSmall(), data.isHasArms(), !data.isHasBasePlate(), data.isMarker());
+            } else if (flag.equals(UpdateFlags.ARMOR_STAND_FLAGS)) {
+                setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
+            } else if (flag.equals(UpdateFlags.ARMOR_STAND_CUSTOM_NAME)) {
+                setDWCustomName(watcher, data.getCustomName() != null ? data.getCustomName().apply(player) : null);
+            } else if (flag.equals(UpdateFlags.ARMOR_STAND_BODY_POSE)) {
+                if (data.getBodyPose() != null) setDWArmorStandBodyPose(watcher, data.getBodyPose());
+            } else if (flag.equals(UpdateFlags.ARMOR_STAND_LEFT_ARM_POSE)) {
+                if (data.getLeftArmPose() != null) setDWArmorStandLeftArmPose(watcher, data.getLeftArmPose());
+            } else if (flag.equals(UpdateFlags.ARMOR_STAND_RIGHT_ARM_POSE)) {
+                if (data.getRightArmPose() != null) setDWArmorStandRightArmPose(watcher, data.getRightArmPose());
+            } else if (flag.equals(UpdateFlags.ARMOR_STAND_LEFT_LEG_POSE)) {
+                if (data.getLeftLegPose() != null) setDWArmorStandLeftLegPose(watcher, data.getLeftLegPose());
+            } else if (flag.equals(UpdateFlags.ARMOR_STAND_RIGHT_LEG_POSE)) {
+                if (data.getRightLegPose() != null) setDWArmorStandRightLegPose(watcher, data.getRightLegPose());
+            } else if (flag.equals(UpdateFlags.ARMOR_STAND_HEAD_POSE)) {
+                if (data.getHeadPose() != null) setDWArmorStandHeadPose(watcher, data.getHeadPose());
+            } else {
+                throw new IllegalStateException("Unexpected flag: " + flag);
             }
         }
 
         return watcher;
+    }
+
+    @Contract(pure = true)
+    private @NotNull SynchedEntityData createBlockDisplayDataWatcher(@NotNull BlockDisplayData data) {
+        SynchedEntityData watcher = new SynchedEntityData(null);
+
+        // Set entity flags
+        setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
+
+        { // Set display data
+            setDWDisplayTransformation(watcher, data.getTransformation());
+            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
+            defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
+            defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
+            defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
+            defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
+            defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
+            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
+            defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+
+            {
+                int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
+                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+            }
+            {
+                org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
+                int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
+                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+            }
+        } // Set display data
+
+        { // Set block display data
+            BlockState nmsBlock = ((CraftBlockData) data.getBlock()).getState();
+            defineDataValue(watcher, DP_BLOCK_DISPLAY_BLOCK, nmsBlock);
+        } // Set block display data
+
+        return watcher;
+    }
+
+    @Contract(pure = true)
+    public @NotNull SynchedEntityData createBlockDisplayDataWatcher(@NotNull BlockDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+        if (flags == null || flags.isEmpty()) return createBlockDisplayDataWatcher(data);
+
+        SynchedEntityData watcher = new SynchedEntityData(null);
+
+        for (UpdateFlag<?> flag : flags) {
+            if (flag.equals(UpdateFlags.DISPLAY_TRANSFORMATION)) {
+                setDWDisplayTransformation(watcher, data.getTransformation());
+            } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DURATION)) {
+                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
+            } else if (flag.equals(UpdateFlags.DISPLAY_TELEPORT_DURATION)) {
+                defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
+            } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_RADIUS)) {
+                defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
+            } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_STRENGTH)) {
+                defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
+            } else if (flag.equals(UpdateFlags.DISPLAY_WIDTH)) {
+                defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
+            } else if (flag.equals(UpdateFlags.DISPLAY_HEIGHT)) {
+                defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
+            } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DELAY)) {
+                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
+            } else if (flag.equals(UpdateFlags.DISPLAY_BILLBOARD)) {
+                defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+            } else if (flag.equals(UpdateFlags.DISPLAY_GLOW_COLOR_OVERRIDE)) {
+                int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
+                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+            } else if (flag.equals(UpdateFlags.DISPLAY_BRIGHTNESS)) {
+                org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
+                int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
+                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+            } else if (flag.equals(UpdateFlags.BLOCK_DISPLAY_BLOCK)) {
+                BlockState nmsBlock = ((CraftBlockData) data.getBlock()).getState();
+                defineDataValue(watcher, DP_BLOCK_DISPLAY_BLOCK, nmsBlock);
+            } else {
+                throw new IllegalStateException("Unexpected flag: " + flag);
+            }
+        }
+
+        return watcher;
+    }
+
+    @Contract(pure = true)
+    private @NotNull SynchedEntityData createItemDisplayDataWatcher(@NotNull ItemDisplayData data) {
+        SynchedEntityData watcher = new SynchedEntityData(null);
+
+        // Set entity flags
+        setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
+
+        { // Set display data
+            setDWDisplayTransformation(watcher, data.getTransformation());
+            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
+            defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
+            defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
+            defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
+            defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
+            defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
+            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
+            defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+
+            {
+                int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
+                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+            }
+            {
+                org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
+                int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
+                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+            }
+        } // Set display data
+
+        { // Set item display data
+            defineDataValue(watcher, DP_ITEM_DISPLAY_ITEM, CraftItemStack.asNMSCopy(data.getItemStack()));
+            defineDataValue(watcher, DP_ITEM_DISPLAY_TRANSFORM, ItemDisplayContext.BY_ID.apply(data.getDisplayTransform().ordinal()).getId());
+        } // Set item display data
+
+        return watcher;
+    }
+
+    @Contract(pure = true)
+    public @NotNull SynchedEntityData createItemDisplayDataWatcher(@NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+        if (flags == null || flags.isEmpty()) return createItemDisplayDataWatcher(data);
+
+        SynchedEntityData watcher = new SynchedEntityData(null);
+
+        for (UpdateFlag<?> flag : flags) {
+            if (flag.equals(UpdateFlags.DISPLAY_TRANSFORMATION)) {
+                setDWDisplayTransformation(watcher, data.getTransformation());
+            } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DURATION)) {
+                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
+            } else if (flag.equals(UpdateFlags.DISPLAY_TELEPORT_DURATION)) {
+                defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
+            } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_RADIUS)) {
+                defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
+            } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_STRENGTH)) {
+                defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
+            } else if (flag.equals(UpdateFlags.DISPLAY_WIDTH)) {
+                defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
+            } else if (flag.equals(UpdateFlags.DISPLAY_HEIGHT)) {
+                defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
+            } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DELAY)) {
+                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
+            } else if (flag.equals(UpdateFlags.DISPLAY_BILLBOARD)) {
+                defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+            } else if (flag.equals(UpdateFlags.DISPLAY_GLOW_COLOR_OVERRIDE)) {
+                int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
+                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+            } else if (flag.equals(UpdateFlags.DISPLAY_BRIGHTNESS)) {
+                org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
+                int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
+                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+            } else if (flag.equals(UpdateFlags.ITEM_DISPLAY_ITEM)) {
+                defineDataValue(watcher, DP_ITEM_DISPLAY_ITEM, CraftItemStack.asNMSCopy(data.getItemStack()));
+            } else if (flag.equals(UpdateFlags.ITEM_DISPLAY_TRANSFORM)) {
+                defineDataValue(watcher, DP_ITEM_DISPLAY_TRANSFORM, ItemDisplayContext.BY_ID.apply(data.getDisplayTransform().ordinal()).getId());
+            } else {
+                throw new IllegalStateException("Unexpected flag: " + flag);
+            }
+        }
+
+        return watcher;
+    }
+
+    @Contract(pure = true)
+    private @NotNull SynchedEntityData createTextDisplayDataWatcher(@NotNull Player player, @NotNull TextDisplayData data) {
+        SynchedEntityData watcher = new SynchedEntityData(null);
+
+        // Set entity flags
+        setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
+
+        { // Set display data
+            setDWDisplayTransformation(watcher, data.getTransformation());
+            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
+            defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
+            defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
+            defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
+            defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
+            defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
+            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
+            defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+
+            {
+                int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
+                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+            }
+            {
+                org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
+                int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
+                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+            }
+        } // Set display data
+
+        { // Set text display data
+            {
+                Component nmsComponent = PaperAdventure.asVanilla(data.getText().apply(player));
+                defineDataValue(watcher, DP_TEXT_DISPLAY_TEXT, nmsComponent);
+            }
+
+            defineDataValue(watcher, DP_TEXT_DISPLAY_LINE_WIDTH, data.getLineWidth());
+
+            {
+                int color = data.getBackgroundColor() != null ? data.getBackgroundColor().asARGB() : -1;
+                defineDataValue(watcher, DP_TEXT_DISPLAY_BACKGROUND_COLOR, color);
+            }
+
+            defineDataValue(watcher, DP_TEXT_DISPLAY_OPACITY, data.getTextOpacity());
+
+            {
+                boolean alignLeft;
+                boolean alignRight;
+                switch (data.getAlignment()) {
+                    case LEFT -> {
+                        alignLeft = true;
+                        alignRight = false;
+                    }
+                    case RIGHT -> {
+                        alignLeft = false;
+                        alignRight = true;
+                    }
+                    default -> {
+                        alignLeft = false;
+                        alignRight = false;
+                    }
+                }
+                setDWTextDisplayStyleFlags(watcher, data.isShadowed(), data.isSeeThrough(), data.isDefaultBackground(), alignLeft, alignRight);
+            }
+        } // Set text display data
+
+        return watcher;
+    }
+
+    @Contract(pure = true)
+    public @NotNull SynchedEntityData createTextDisplayDataWatcher(@NotNull Player player, @NotNull TextDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+        if (flags == null || flags.isEmpty()) return createTextDisplayDataWatcher(player, data);
+
+        SynchedEntityData watcher = new SynchedEntityData(null);
+
+        for (UpdateFlag<?> flag : flags) {
+            if (flag.equals(UpdateFlags.DISPLAY_TRANSFORMATION)) {
+                setDWDisplayTransformation(watcher, data.getTransformation());
+            } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DURATION)) {
+                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
+            } else if (flag.equals(UpdateFlags.DISPLAY_TELEPORT_DURATION)) {
+                defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
+            } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_RADIUS)) {
+                defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
+            } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_STRENGTH)) {
+                defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
+            } else if (flag.equals(UpdateFlags.DISPLAY_WIDTH)) {
+                defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
+            } else if (flag.equals(UpdateFlags.DISPLAY_HEIGHT)) {
+                defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
+            } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DELAY)) {
+                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
+            } else if (flag.equals(UpdateFlags.DISPLAY_BILLBOARD)) {
+                defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+            } else if (flag.equals(UpdateFlags.DISPLAY_GLOW_COLOR_OVERRIDE)) {
+                int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
+                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+            } else if (flag.equals(UpdateFlags.DISPLAY_BRIGHTNESS)) {
+                org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
+                int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
+                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+            } else if (flag.equals(UpdateFlags.TEXT_DISPLAY_TEXT)) {
+                Component nmsComponent = PaperAdventure.asVanilla(data.getText().apply(player));
+                defineDataValue(watcher, DP_TEXT_DISPLAY_TEXT, nmsComponent);
+            } else if (flag.equals(UpdateFlags.TEXT_DISPLAY_LINE_WIDTH)) {
+                defineDataValue(watcher, DP_TEXT_DISPLAY_LINE_WIDTH, data.getLineWidth());
+            } else if (flag.equals(UpdateFlags.TEXT_DISPLAY_BACKGROUND_COLOR)) {
+                int color = data.getBackgroundColor() != null ? data.getBackgroundColor().asARGB() : -1;
+                defineDataValue(watcher, DP_TEXT_DISPLAY_BACKGROUND_COLOR, color);
+            } else if (flag.equals(UpdateFlags.TEXT_DISPLAY_OPACITY)) {
+                defineDataValue(watcher, DP_TEXT_DISPLAY_OPACITY, data.getTextOpacity());
+            } else if (flag.equals(UpdateFlags.TEXT_DISPLAY_STYLE)) {
+                boolean alignLeft;
+                boolean alignRight;
+                switch (data.getAlignment()) {
+                    case LEFT -> {
+                        alignLeft = true;
+                        alignRight = false;
+                    }
+                    case RIGHT -> {
+                        alignLeft = false;
+                        alignRight = true;
+                    }
+                    default -> {
+                        alignLeft = false;
+                        alignRight = false;
+                    }
+                }
+                setDWTextDisplayStyleFlags(watcher, data.isShadowed(), data.isSeeThrough(), data.isDefaultBackground(), alignLeft, alignRight);
+            } else {
+                throw new IllegalStateException("Unexpected flag: " + flag);
+            }
+        }
+
+        return watcher;
+    }
+
+    private void setDWTextDisplayStyleFlags(@NotNull SynchedEntityData watcher, boolean shadowed, boolean seeThrough, boolean defaultBackground, boolean alignLeft, boolean alignRight) {
+        byte flags = 0;
+        flags = setStatus(flags, 0x1, shadowed);
+        flags = setStatus(flags, 0x2, seeThrough);
+        flags = setStatus(flags, 0x4, defaultBackground);
+        flags = setStatus(flags, 0x8, alignLeft);
+        flags = setStatus(flags, 0x10, alignRight);
+        defineDataValue(watcher, DP_TEXT_DISPLAY_STYLE_FLAGS, flags);
+    }
+
+    private void setDWDisplayTransformation(SynchedEntityData watcher, Transformation transformation) {
+        com.mojang.math.Transformation nmsTransformation = new com.mojang.math.Transformation(transformation.getTranslation(), transformation.getLeftRotation(), transformation.getScale(), transformation.getRightRotation());
+        defineDataValue(watcher, DP_DISPLAY_TRANSLATION, nmsTransformation.getTranslation());
+        defineDataValue(watcher, DP_DISPLAY_LEFT_ROTATION, nmsTransformation.getLeftRotation());
+        defineDataValue(watcher, DP_DISPLAY_SCALE, nmsTransformation.getScale());
+        defineDataValue(watcher, DP_DISPLAY_RIGHT_ROTATION, nmsTransformation.getRightRotation());
     }
 
     @Contract(pure = true)
@@ -258,6 +645,16 @@ public class NMSUtil {
     }
 
     @Contract(pure = true)
+    private byte toNMS(@NotNull org.bukkit.entity.Display.Billboard old) {
+        return switch (old) {
+            case FIXED -> 0;
+            case VERTICAL -> 1;
+            case HORIZONTAL -> 2;
+            case CENTER -> 3;
+        };
+    }
+
+    @Contract(pure = true)
     private byte setFlag(byte old, int bit, boolean flag) {
         if (flag) {
             return (byte) (old | 1 << bit);
@@ -279,9 +676,10 @@ public class NMSUtil {
         return METHOD_TRACKEDENTITY_GETEFFECTIVERANGE.invoke(((CraftPlayer) player).getHandle().tracker);
     }
 
-    private void setDWEntityFlags(@NotNull SynchedEntityData watcher, boolean invisible) {
+    private void setDWEntityFlags(@NotNull SynchedEntityData watcher, boolean invisible, boolean glowing) {
         byte flags = 0;
         flags = setFlag(flags, 0x5, invisible);
+        flags = setFlag(flags, 0x6, glowing);
         defineDataValue(watcher, DP_ENTITY_SHARED_FLAGS, flags);
     }
 

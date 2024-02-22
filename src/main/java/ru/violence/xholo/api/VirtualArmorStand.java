@@ -1,18 +1,11 @@
 package ru.violence.xholo.api;
 
-import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface VirtualArmorStand {
-    @NotNull Plugin getPlugin();
-
-    @Contract(pure = true)
-    int getEntityId();
-
+public interface VirtualArmorStand extends VirtualEntity {
     @Contract(pure = true)
     @NotNull ArmorStandData getData();
 
@@ -47,12 +40,4 @@ public interface VirtualArmorStand {
     @Nullable ItemStack getHelmet();
 
     void setHelmet(@Nullable ItemStack item);
-
-    @Contract(pure = true)
-    @NotNull Location getLocation();
-
-    void setLocation(@NotNull Location location);
-
-    @Contract(pure = true)
-    @NotNull Manager manager();
 }

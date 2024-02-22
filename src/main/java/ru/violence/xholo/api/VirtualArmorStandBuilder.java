@@ -6,7 +6,10 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface VirtualArmorStandBuilder {
+public interface VirtualArmorStandBuilder extends VirtualEntityBuilder {
+    @Override
+    @NotNull VirtualArmorStandBuilder location(@NotNull Location location);
+
     @Contract(pure = true)
     @Nullable ArmorStandData data();
 
@@ -48,12 +51,6 @@ public interface VirtualArmorStandBuilder {
 
     @Contract(value = "_ -> this")
     @NotNull VirtualArmorStandBuilder helmet(@Nullable ItemStack item);
-
-    @Contract(pure = true)
-    @Nullable Location location();
-
-    @Contract(value = "_ -> this")
-    @NotNull VirtualArmorStandBuilder location(@NotNull Location location);
 
     @Contract(value = "-> new", pure = true)
     @NotNull VirtualArmorStand build();

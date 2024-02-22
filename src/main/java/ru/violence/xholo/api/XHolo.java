@@ -4,15 +4,31 @@ import lombok.experimental.UtilityClass;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import ru.violence.xholo.XHoloPlugin;
 import ru.violence.xholo.api.impl.VirtualArmorStandBuilderImpl;
-import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
+import ru.violence.xholo.api.impl.VirtualBlockDisplayBuilderImpl;
+import ru.violence.xholo.api.impl.VirtualItemDisplayBuilderImpl;
+import ru.violence.xholo.api.impl.VirtualTextDisplayBuilderImpl;
 
 @UtilityClass
 public class XHolo {
-    private HologramRegistryImpl registry;
-
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull VirtualArmorStandBuilder armorStand(@NotNull Plugin plugin) {
-        return new VirtualArmorStandBuilderImpl(plugin, registry);
+        return new VirtualArmorStandBuilderImpl(plugin, XHoloPlugin.getInstance().getRegistry());
+    }
+
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull VirtualBlockDisplayBuilder blockDisplay(@NotNull Plugin plugin) {
+        return new VirtualBlockDisplayBuilderImpl(plugin, XHoloPlugin.getInstance().getRegistry());
+    }
+
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull VirtualItemDisplayBuilder itemDisplay(@NotNull Plugin plugin) {
+        return new VirtualItemDisplayBuilderImpl(plugin, XHoloPlugin.getInstance().getRegistry());
+    }
+
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull VirtualTextDisplayBuilder textDisplay(@NotNull Plugin plugin) {
+        return new VirtualTextDisplayBuilderImpl(plugin, XHoloPlugin.getInstance().getRegistry());
     }
 }
