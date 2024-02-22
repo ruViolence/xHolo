@@ -8,7 +8,9 @@ import net.minecraft.core.Rotations;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundBundlePacket;
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
@@ -116,10 +118,12 @@ public class NMSUtil {
                                       @Nullable ItemStack chestItem,
                                       @Nullable ItemStack legsItem,
                                       @Nullable ItemStack feetItem) {
-        spawnEntityLiving(player, location, entityId, EntityType.ARMOR_STAND);
-        updateArmorStandMetadata(player, entityId, data, null);
+        List<Packet<ClientGamePacketListener>> packets = new ArrayList<>(3);
 
-        sendEquipment(player, entityId, new Map.Entry[]{
+        packets.add(createSpawnEntityPacket(location, entityId, EntityType.ARMOR_STAND));
+        packets.add(createSetArmorStandMetadataPacket(player, entityId, data, null));
+
+        ClientboundSetEquipmentPacket equipmentPacket = createEquipmentPacket(entityId, new Map.Entry[]{
                 new AbstractMap.SimpleEntry<>(EquipmentSlot.HAND, mainHandItem),
                 new AbstractMap.SimpleEntry<>(EquipmentSlot.OFF_HAND, offHandItem),
                 new AbstractMap.SimpleEntry<>(EquipmentSlot.HEAD, headItem),
@@ -127,25 +131,58 @@ public class NMSUtil {
                 new AbstractMap.SimpleEntry<>(EquipmentSlot.LEGS, legsItem),
                 new AbstractMap.SimpleEntry<>(EquipmentSlot.FEET, feetItem)
         }, true);
+        if (equipmentPacket != null) packets.add(equipmentPacket);
+
+        sendPacket(player, new ClientboundBundlePacket(packets));
     }
 
     public void spawnEntityBlockDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull BlockDisplayData data) {
-        spawnEntityLiving(player, location, entityId, EntityType.BLOCK_DISPLAY);
-        updateBlockDisplayMetadata(player, entityId, data, null);
+        sendPacket(player, new ClientboundBundlePacket(List.of(
+                createSpawnEntityPacket(location, entityId, EntityType.BLOCK_DISPLAY),
+                createSetBlockDisplayMetadataPacket(entityId, data, null)
+        )));
     }
 
     public void spawnEntityItemDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ItemDisplayData data) {
-        spawnEntityLiving(player, location, entityId, EntityType.ITEM_DISPLAY);
-        updateItemDisplayMetadata(player, entityId, data, null);
+        sendPacket(player, new ClientboundBundlePacket(List.of(
+                createSpawnEntityPacket(location, entityId, EntityType.ITEM_DISPLAY),
+                createSetItemDisplayMetadataPacket(entityId, data, null)
+        )));
     }
 
     public void spawnEntityTextDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull TextDisplayData data) {
-        spawnEntityLiving(player, location, entityId, EntityType.TEXT_DISPLAY);
-        updateTextDisplayMetadata(player, entityId, data, null);
+        sendPacket(player, new ClientboundBundlePacket(List.of(
+                createSpawnEntityPacket(location, entityId, EntityType.TEXT_DISPLAY),
+                createSetTextDisplayMetadataPacket(player, entityId, data, null)
+        )));
     }
 
-    public void spawnEntityLiving(@NotNull Player player, @NotNull Location location, int entityId, @NotNull EntityType<?> type) {
-        ClientboundAddEntityPacket packet = new ClientboundAddEntityPacket(
+    public void updateArmorStandMetadata(@NotNull Player player, int entityId, @NotNull ArmorStandData data, @Nullable List<UpdateFlag<?>> flags) {
+        sendPacket(player, createSetArmorStandMetadataPacket(player, entityId, data, flags));
+    }
+
+    public void updateBlockDisplayMetadata(@NotNull Player player, int entityId, @NotNull BlockDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+        sendPacket(player, createSetBlockDisplayMetadataPacket(entityId, data, flags));
+    }
+
+    public void updateItemDisplayMetadata(@NotNull Player player, int entityId, @NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+        sendPacket(player, createSetItemDisplayMetadataPacket(entityId, data, flags));
+    }
+
+    public void updateTextDisplayMetadata(@NotNull Player player, int entityId, @NotNull TextDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+        sendPacket(player, createSetTextDisplayMetadataPacket(player, entityId, data, flags));
+    }
+
+    public void sendEquipment(@NotNull Player player, int entityId,
+                              @NotNull Map.Entry<EquipmentSlot, ItemStack> @Nullable [] equipment,
+                              boolean isOnSpawn) {
+        ClientboundSetEquipmentPacket packet = createEquipmentPacket(entityId, equipment, isOnSpawn);
+        if (packet != null) sendPacket(player, packet);
+    }
+
+    @Contract(pure = true)
+    public @NotNull ClientboundAddEntityPacket createSpawnEntityPacket(@NotNull Location location, int entityId, @NotNull EntityType<?> type) {
+        return new ClientboundAddEntityPacket(
                 entityId,
                 UUID.randomUUID(),
                 location.getX(),
@@ -158,14 +195,13 @@ public class NMSUtil {
                 Vec3.ZERO,
                 location.getYaw()
         );
-
-        sendPacket(player, packet);
     }
 
-    public void sendEquipment(@NotNull Player player, int entityId,
-                              @Nullable Map.Entry<EquipmentSlot, ItemStack>[] equipment,
-                              boolean isOnSpawn) {
-        if (equipment == null || equipment.length == 0) return;
+    @Contract(pure = true)
+    public @Nullable ClientboundSetEquipmentPacket createEquipmentPacket(int entityId,
+                                                                         @NotNull Map.Entry<EquipmentSlot, ItemStack> @Nullable [] equipment,
+                                                                         boolean isOnSpawn) {
+        if (equipment == null || equipment.length == 0) return null;
 
         List<Pair<net.minecraft.world.entity.EquipmentSlot, net.minecraft.world.item.ItemStack>> equipmentList = new ArrayList<>(equipment.length);
 
@@ -174,45 +210,49 @@ public class NMSUtil {
             equipmentList.add(Pair.of(toNMS(pair.getKey()), CraftItemStack.asNMSCopy(pair.getValue())));
         }
 
-        if (!equipmentList.isEmpty()) {
-            sendPacket(player, new ClientboundSetEquipmentPacket(entityId, equipmentList));
-        }
+        if (equipmentList.isEmpty()) return null;
+
+        return new ClientboundSetEquipmentPacket(entityId, equipmentList);
     }
 
-    public void updateArmorStandMetadata(@NotNull Player player, int entityId, @NotNull ArmorStandData data, @Nullable List<UpdateFlag<?>> flags) {
+    @Contract(pure = true)
+    public @NotNull ClientboundSetEntityDataPacket createSetArmorStandMetadataPacket(@NotNull Player player, int entityId, @NotNull ArmorStandData data, @Nullable List<UpdateFlag<?>> flags) {
         SynchedEntityData watcher = flags == null || flags.isEmpty()
                 ? createArmorStandDataWatcher(player, data)
                 : createArmorStandDataWatcher(player, data, flags);
 
         List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
-        sendPacket(player, new ClientboundSetEntityDataPacket(entityId, dataValues));
+        return new ClientboundSetEntityDataPacket(entityId, dataValues);
     }
 
-    public void updateBlockDisplayMetadata(@NotNull Player player, int entityId, @NotNull BlockDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+    @Contract(pure = true)
+    public @NotNull ClientboundSetEntityDataPacket createSetBlockDisplayMetadataPacket(int entityId, @NotNull BlockDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
         SynchedEntityData watcher = flags == null || flags.isEmpty()
                 ? createBlockDisplayDataWatcher(data)
                 : createBlockDisplayDataWatcher(data, flags);
 
         List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
-        sendPacket(player, new ClientboundSetEntityDataPacket(entityId, dataValues));
+        return new ClientboundSetEntityDataPacket(entityId, dataValues);
     }
 
-    public void updateItemDisplayMetadata(@NotNull Player player, int entityId, @NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+    @Contract(pure = true)
+    public @NotNull ClientboundSetEntityDataPacket createSetItemDisplayMetadataPacket(int entityId, @NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
         SynchedEntityData watcher = flags == null || flags.isEmpty()
                 ? createItemDisplayDataWatcher(data)
                 : createItemDisplayDataWatcher(data, flags);
 
         List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
-        sendPacket(player, new ClientboundSetEntityDataPacket(entityId, dataValues));
+        return new ClientboundSetEntityDataPacket(entityId, dataValues);
     }
 
-    public void updateTextDisplayMetadata(@NotNull Player player, int entityId, @NotNull TextDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+    @Contract(pure = true)
+    public @NotNull ClientboundSetEntityDataPacket createSetTextDisplayMetadataPacket(@NotNull Player player, int entityId, @NotNull TextDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
         SynchedEntityData watcher = flags == null || flags.isEmpty()
                 ? createTextDisplayDataWatcher(player, data)
                 : createTextDisplayDataWatcher(player, data, flags);
 
         List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
-        sendPacket(player, new ClientboundSetEntityDataPacket(entityId, dataValues));
+        return new ClientboundSetEntityDataPacket(entityId, dataValues);
     }
 
     public void teleportEntity(@NotNull Player player, int entityId, @NotNull Location location) {
