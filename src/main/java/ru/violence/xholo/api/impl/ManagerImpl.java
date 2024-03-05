@@ -12,12 +12,14 @@ import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.XHoloPlugin;
 import ru.violence.xholo.api.ArmorStandData;
 import ru.violence.xholo.api.BlockDisplayData;
+import ru.violence.xholo.api.InteractionData;
 import ru.violence.xholo.api.ItemDisplayData;
 import ru.violence.xholo.api.Manager;
 import ru.violence.xholo.api.TextDisplayData;
 import ru.violence.xholo.api.VirtualArmorStand;
 import ru.violence.xholo.api.VirtualBlockDisplay;
 import ru.violence.xholo.api.VirtualEntity;
+import ru.violence.xholo.api.VirtualInteraction;
 import ru.violence.xholo.api.VirtualItemDisplay;
 import ru.violence.xholo.api.VirtualTextDisplay;
 import ru.violence.xholo.util.Utils;
@@ -74,6 +76,8 @@ public final class ManagerImpl implements Manager {
                 NMSUtil.spawnEntityItemDisplay(player, entityId, vid.getLocation(), vid.getData());
             } else if (virtualEntity instanceof VirtualTextDisplay vbd) {
                 NMSUtil.spawnEntityTextDisplay(player, entityId, vbd.getLocation(), vbd.getData());
+            } else if (virtualEntity instanceof VirtualInteraction vbd) {
+                NMSUtil.spawnEntityInteraction(player, entityId, vbd.getLocation(), vbd.getData());
             } else {
                 throw new IllegalStateException("Unknown entity type: " + virtualEntity.getClass().getSimpleName());
             }
@@ -235,6 +239,12 @@ public final class ManagerImpl implements Manager {
 
                 for (Player player : viewers) {
                     NMSUtil.updateTextDisplayMetadata(player, entityId, data, flags);
+                }
+            } else if (virtualEntity instanceof VirtualInteractionImpl vi) {
+                InteractionData data = vi.getData();
+
+                for (Player player : viewers) {
+                    NMSUtil.updateInteractionMetadata(player, entityId, data, flags);
                 }
             } else {
                 throw new IllegalStateException("Unknown entity type: " + virtualEntity.getClass().getSimpleName());

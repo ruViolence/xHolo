@@ -22,6 +22,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Interaction;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
@@ -46,6 +47,7 @@ import ru.violence.coreapi.common.api.reflection.ReflectionUtil;
 import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ArmorStandData;
 import ru.violence.xholo.api.BlockDisplayData;
+import ru.violence.xholo.api.InteractionData;
 import ru.violence.xholo.api.ItemDisplayData;
 import ru.violence.xholo.api.TextDisplayData;
 import ru.violence.xholo.util.updateflags.UpdateFlag;
@@ -100,6 +102,10 @@ public class NMSUtil {
     private final EntityDataAccessor<Integer> DP_TEXT_DISPLAY_BACKGROUND_COLOR = Display.TextDisplay.DATA_BACKGROUND_COLOR_ID;
     private final EntityDataAccessor<Byte> DP_TEXT_DISPLAY_OPACITY = ReflectionUtil.getFieldValue(Display.TextDisplay.class, null, "aP");
     private final EntityDataAccessor<Byte> DP_TEXT_DISPLAY_STYLE_FLAGS = ReflectionUtil.getFieldValue(Display.TextDisplay.class, null, "aQ");
+
+    private final EntityDataAccessor<Float> DP_INTERACTION_WIDTH = ReflectionUtil.getFieldValue(Interaction.class, null, "c");
+    private final EntityDataAccessor<Float> DP_INTERACTION_HEIGHT = ReflectionUtil.getFieldValue(Interaction.class, null, "d");
+    private final EntityDataAccessor<Boolean> DP_INTERACTION_RESPONSE = ReflectionUtil.getFieldValue(Interaction.class, null, "e");
 
     private final ReflectMethod<Integer> METHOD_TRACKEDENTITY_GETEFFECTIVERANGE = new ReflectMethod<>(ChunkMap.TrackedEntity.class, "b", (Class<?>[]) null);
 
@@ -157,6 +163,13 @@ public class NMSUtil {
         )));
     }
 
+    public void spawnEntityInteraction(@NotNull Player player, int entityId, @NotNull Location location, @NotNull InteractionData data) {
+        sendPacket(player, new ClientboundBundlePacket(List.of(
+                createSpawnEntityPacket(location, entityId, EntityType.INTERACTION),
+                createSetInteractionMetadataPacket(player, entityId, data, null)
+        )));
+    }
+
     public void updateArmorStandMetadata(@NotNull Player player, int entityId, @NotNull ArmorStandData data, @Nullable List<UpdateFlag<?>> flags) {
         sendPacket(player, createSetArmorStandMetadataPacket(player, entityId, data, flags));
     }
@@ -171,6 +184,10 @@ public class NMSUtil {
 
     public void updateTextDisplayMetadata(@NotNull Player player, int entityId, @NotNull TextDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
         sendPacket(player, createSetTextDisplayMetadataPacket(player, entityId, data, flags));
+    }
+
+    public void updateInteractionMetadata(@NotNull Player player, int entityId, @NotNull InteractionData data, @Nullable List<UpdateFlag<?>> flags) {
+        sendPacket(player, createSetInteractionMetadataPacket(player, entityId, data, flags));
     }
 
     public void sendEquipment(@NotNull Player player, int entityId,
@@ -250,6 +267,16 @@ public class NMSUtil {
         SynchedEntityData watcher = flags == null || flags.isEmpty()
                 ? createTextDisplayDataWatcher(player, data)
                 : createTextDisplayDataWatcher(player, data, flags);
+
+        List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
+        return new ClientboundSetEntityDataPacket(entityId, dataValues);
+    }
+
+    @Contract(pure = true)
+    public @NotNull ClientboundSetEntityDataPacket createSetInteractionMetadataPacket(@NotNull Player player, int entityId, @NotNull InteractionData data, @Nullable List<UpdateFlag<?>> flags) {
+        SynchedEntityData watcher = flags == null || flags.isEmpty()
+                ? createInteractionDataWatcher(player, data)
+                : createInteractionDataWatcher(player, data, flags);
 
         List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
         return new ClientboundSetEntityDataPacket(entityId, dataValues);
@@ -629,6 +656,43 @@ public class NMSUtil {
                     }
                 }
                 setDWTextDisplayStyleFlags(watcher, data.isShadowed(), data.isSeeThrough(), data.isDefaultBackground(), alignLeft, alignRight);
+            } else {
+                throw new IllegalStateException("Unexpected flag: " + flag);
+            }
+        }
+
+        return watcher;
+    }
+
+    @Contract(pure = true)
+    private @NotNull SynchedEntityData createInteractionDataWatcher(@NotNull Player player, @NotNull InteractionData data) {
+        SynchedEntityData watcher = new SynchedEntityData(null);
+
+        // Set entity flags
+        setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
+
+        { // Set interaction data
+            defineDataValue(watcher, DP_INTERACTION_WIDTH, data.getWidth());
+            defineDataValue(watcher, DP_INTERACTION_HEIGHT, data.getHeight());
+            defineDataValue(watcher, DP_INTERACTION_RESPONSE, data.isResponsive());
+        } // Set interaction data
+
+        return watcher;
+    }
+
+    @Contract(pure = true)
+    public @NotNull SynchedEntityData createInteractionDataWatcher(@NotNull Player player, @NotNull InteractionData data, @Nullable List<UpdateFlag<?>> flags) {
+        if (flags == null || flags.isEmpty()) return createInteractionDataWatcher(player, data);
+
+        SynchedEntityData watcher = new SynchedEntityData(null);
+
+        for (UpdateFlag<?> flag : flags) {
+            if (flag.equals(UpdateFlags.INTERACTION_WIDTH)) {
+                defineDataValue(watcher, DP_INTERACTION_WIDTH, data.getWidth());
+            } else if (flag.equals(UpdateFlags.INTERACTION_HEIGHT)) {
+                defineDataValue(watcher, DP_INTERACTION_HEIGHT, data.getHeight());
+            } else if (flag.equals(UpdateFlags.INTERACTION_RESPONSE)) {
+                defineDataValue(watcher, DP_INTERACTION_RESPONSE, data.isResponsive());
             } else {
                 throw new IllegalStateException("Unexpected flag: " + flag);
             }

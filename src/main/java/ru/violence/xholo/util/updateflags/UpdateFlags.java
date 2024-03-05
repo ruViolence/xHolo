@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.violence.xholo.api.ArmorStandData;
 import ru.violence.xholo.api.BlockDisplayData;
 import ru.violence.xholo.api.DisplayData;
+import ru.violence.xholo.api.InteractionData;
 import ru.violence.xholo.api.ItemDisplayData;
 import ru.violence.xholo.api.TextDisplayData;
 import ru.violence.xholo.api.impl.DisplayDataImpl;
@@ -194,6 +195,25 @@ public class UpdateFlags {
         }
     };
 
+    public final UpdateFlag<InteractionData> INTERACTION_WIDTH = new UpdateFlag<>(28) {
+        @Override
+        public boolean isChanged(InteractionData o, InteractionData n) {
+            return o.getWidth() != n.getWidth();
+        }
+    };
+    public final UpdateFlag<InteractionData> INTERACTION_HEIGHT = new UpdateFlag<>(29) {
+        @Override
+        public boolean isChanged(InteractionData o, InteractionData n) {
+            return o.getHeight() != n.getHeight();
+        }
+    };
+    public final UpdateFlag<InteractionData> INTERACTION_RESPONSE = new UpdateFlag<>(30) {
+        @Override
+        public boolean isChanged(InteractionData o, InteractionData n) {
+            return o.isResponsive() != n.isResponsive();
+        }
+    };
+
     public final List<UpdateFlag<ArmorStandData>> ALL_ARMOR_STAND_FLAGS = List.of(
             ARMOR_STAND_STATUS,
             ARMOR_STAND_FLAGS,
@@ -235,6 +255,12 @@ public class UpdateFlags {
             TEXT_DISPLAY_BACKGROUND_COLOR,
             TEXT_DISPLAY_OPACITY,
             TEXT_DISPLAY_STYLE
+    );
+
+    public final List<UpdateFlag<InteractionData>> ALL_INTERACTION_FLAGS = List.of(
+            INTERACTION_WIDTH,
+            INTERACTION_HEIGHT,
+            INTERACTION_RESPONSE
     );
 
     public @NotNull List<UpdateFlag<?>> compareArmorStandData(@NotNull ArmorStandData o, @NotNull ArmorStandData n) {
@@ -295,6 +321,18 @@ public class UpdateFlags {
         }
 
         for (UpdateFlag<TextDisplayData> flag : ALL_TEXT_DISPLAY_FLAGS) {
+            if (flag.isChanged(o, n)) {
+                list.add(flag);
+            }
+        }
+
+        return list;
+    }
+
+    public @NotNull List<UpdateFlag<?>> compareInteractionData(@NotNull InteractionData o, @NotNull InteractionData n) {
+        List<UpdateFlag<?>> list = new ArrayList<>(9);
+
+        for (UpdateFlag<InteractionData> flag : ALL_INTERACTION_FLAGS) {
             if (flag.isChanged(o, n)) {
                 list.add(flag);
             }

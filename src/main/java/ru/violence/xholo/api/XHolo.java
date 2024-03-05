@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.violence.xholo.XHoloPlugin;
 import ru.violence.xholo.api.impl.VirtualArmorStandBuilderImpl;
 import ru.violence.xholo.api.impl.VirtualBlockDisplayBuilderImpl;
+import ru.violence.xholo.api.impl.VirtualInteractionBuilderImpl;
 import ru.violence.xholo.api.impl.VirtualItemDisplayBuilderImpl;
 import ru.violence.xholo.api.impl.VirtualTextDisplayBuilderImpl;
 
@@ -30,5 +31,10 @@ public class XHolo {
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull VirtualTextDisplayBuilder textDisplay(@NotNull Plugin plugin) {
         return new VirtualTextDisplayBuilderImpl(plugin, XHoloPlugin.getInstance().getRegistry());
+    }
+
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull VirtualInteractionBuilder interaction(@NotNull Plugin plugin) {
+        return new VirtualInteractionBuilderImpl(plugin, XHoloPlugin.getInstance().getRegistry());
     }
 }
