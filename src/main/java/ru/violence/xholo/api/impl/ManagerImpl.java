@@ -156,6 +156,13 @@ public final class ManagerImpl implements Manager {
     }
 
     @Override
+    public boolean isVisibleFor(@NotNull Player player) {
+        synchronized (virtualEntity) {
+            return viewers.contains(player);
+        }
+    }
+
+    @Override
     public @NotNull Set<Player> getViewers() {
         synchronized (virtualEntity) {
             return new HashSet<>(viewers);

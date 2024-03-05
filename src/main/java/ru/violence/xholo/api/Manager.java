@@ -36,6 +36,9 @@ public interface Manager {
     @Contract(pure = true)
     int getViewersAmount();
 
+    @Contract(pure = true)
+    boolean isVisibleFor(@NotNull Player player);
+
     @Contract(value = "-> new", pure = true)
     @NotNull Set<Player> getViewers();
 

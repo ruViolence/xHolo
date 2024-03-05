@@ -1,7 +1,9 @@
 package ru.violence.xholo.api.registry.impl;
 
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.XHoloPlugin;
 import ru.violence.xholo.api.VirtualEntity;
@@ -38,6 +40,19 @@ public final class HologramRegistryImpl implements HologramRegistry {
     }
 
     @Override
+    public @Nullable VirtualEntity getFromId(int entityId) {
+        lock.readLock().lock();
+        for (VirtualEntity ve : virtualEntities) {
+            if (ve.getEntityId() == entityId) {
+                return ve;
+            }
+        }
+        lock.readLock().unlock();
+
+        return null;
+    }
+
+    @Override
     public @NotNull List<VirtualEntity> getAllFrom(@NotNull World world) {
         Check.notNull(world, "World is null");
         List<VirtualEntity> list = new ArrayList<>();
@@ -57,6 +72,22 @@ public final class HologramRegistryImpl implements HologramRegistry {
     public @NotNull List<VirtualEntity> getAll() {
         lock.readLock().lock();
         List<VirtualEntity> list = new ArrayList<>(virtualEntities);
+        lock.readLock().unlock();
+
+        return list;
+    }
+
+    @Override
+    public @NotNull List<VirtualEntity> getAllVisibleFor(@NotNull Player player) {
+        Check.notNull(player, "Player is null");
+        List<VirtualEntity> list = new ArrayList<>();
+
+        lock.readLock().lock();
+        for (VirtualEntity ve : virtualEntities) {
+            if (ve.manager().isVisibleFor(player)) {
+                list.add(ve);
+            }
+        }
         lock.readLock().unlock();
 
         return list;
