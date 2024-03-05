@@ -44,7 +44,7 @@ public final class VirtualItemDisplayImpl implements VirtualItemDisplay {
 
     @Override
     public @NotNull Location getLocation() {
-        return location;
+        return location.clone();
     }
 
     @Override

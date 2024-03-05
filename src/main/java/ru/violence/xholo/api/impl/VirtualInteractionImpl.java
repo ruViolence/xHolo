@@ -46,7 +46,7 @@ public final class VirtualInteractionImpl implements VirtualInteraction {
 
     @Override
     public @NotNull Location getLocation() {
-        return location;
+        return location.clone();
     }
 
     @Override

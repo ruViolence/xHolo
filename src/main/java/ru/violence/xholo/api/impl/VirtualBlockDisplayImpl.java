@@ -44,7 +44,7 @@ public final class VirtualBlockDisplayImpl implements VirtualBlockDisplay {
 
     @Override
     public @NotNull Location getLocation() {
-        return location;
+        return location.clone();
     }
 
     @Override

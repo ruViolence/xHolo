@@ -65,7 +65,7 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
 
     @Override
     public @NotNull Location getLocation() {
-        return location;
+        return location.clone();
     }
 
     @Override
