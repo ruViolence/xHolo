@@ -730,22 +730,14 @@ public class NMSUtil {
 
     @Contract(pure = true)
     private @NotNull net.minecraft.world.entity.EquipmentSlot toNMS(@NotNull EquipmentSlot old) {
-        switch (old) {
-            case HAND:
-                return net.minecraft.world.entity.EquipmentSlot.MAINHAND;
-            case OFF_HAND:
-                return net.minecraft.world.entity.EquipmentSlot.OFFHAND;
-            case FEET:
-                return net.minecraft.world.entity.EquipmentSlot.FEET;
-            case LEGS:
-                return net.minecraft.world.entity.EquipmentSlot.LEGS;
-            case CHEST:
-                return net.minecraft.world.entity.EquipmentSlot.CHEST;
-            case HEAD:
-                return net.minecraft.world.entity.EquipmentSlot.HEAD;
-            default:
-                throw new IllegalStateException("Unexpected value: " + old);
-        }
+        return switch (old) {
+            case HAND -> net.minecraft.world.entity.EquipmentSlot.MAINHAND;
+            case OFF_HAND -> net.minecraft.world.entity.EquipmentSlot.OFFHAND;
+            case FEET -> net.minecraft.world.entity.EquipmentSlot.FEET;
+            case LEGS -> net.minecraft.world.entity.EquipmentSlot.LEGS;
+            case CHEST -> net.minecraft.world.entity.EquipmentSlot.CHEST;
+            case HEAD -> net.minecraft.world.entity.EquipmentSlot.HEAD;
+        };
     }
 
     @Contract(pure = true)
