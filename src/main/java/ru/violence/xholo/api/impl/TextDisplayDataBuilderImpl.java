@@ -1,5 +1,6 @@
 package ru.violence.xholo.api.impl;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.Color;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.TextDisplay;
@@ -13,7 +14,7 @@ import ru.violence.xholo.api.TextDisplayData;
 import ru.violence.xholo.api.TextDisplayDataBuilder;
 
 public final class TextDisplayDataBuilderImpl extends DisplayDataBuilderImpl implements TextDisplayDataBuilder {
-    private @Nullable CustomName text;
+    private @NotNull CustomName text;
     private int lineWidth;
     private @Nullable Color backgroundColor;
     private byte textOpacity;
@@ -23,6 +24,7 @@ public final class TextDisplayDataBuilderImpl extends DisplayDataBuilderImpl imp
     private TextDisplay.@NotNull TextAlignment alignment;
 
     public TextDisplayDataBuilderImpl() {
+        this.text = CustomName.component(Component.empty());
         this.lineWidth = 200;
         this.backgroundColor = Color.fromARGB(0x40000000);
         this.textOpacity = -1;
@@ -119,7 +121,7 @@ public final class TextDisplayDataBuilderImpl extends DisplayDataBuilderImpl imp
     }
 
     @Override
-    public @Nullable CustomName text() {
+    public @NotNull CustomName text() {
         return text;
     }
 

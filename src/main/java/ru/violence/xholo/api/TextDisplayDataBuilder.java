@@ -62,7 +62,7 @@ public interface TextDisplayDataBuilder extends DisplayDataBuilder {
     @NotNull TextDisplayDataBuilder brightness(Display.@Nullable Brightness brightness);
 
     @Contract(pure = true)
-    @Nullable CustomName text();
+    @NotNull CustomName text();
 
     @Contract(value = "_ -> this")
     @NotNull TextDisplayDataBuilder text(@NotNull CustomName text);
