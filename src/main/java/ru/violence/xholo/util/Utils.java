@@ -10,7 +10,7 @@ import ru.violence.xholo.util.nms.NMSUtil;
 @UtilityClass
 public class Utils {
     @Contract(pure = true)
-    public static boolean isInDisplayRange(@NotNull Player player, @NotNull Location loc, int range) {
+    public static boolean isInDisplayRange(@NotNull Player player, @NotNull Location loc, double range) {
         double xDif = player.getLocation().getX() - loc.getX();
         double yDif = player.getLocation().getY() - loc.getY();
         double zDif = player.getLocation().getZ() - loc.getZ();

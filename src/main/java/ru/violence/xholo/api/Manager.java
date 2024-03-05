@@ -4,13 +4,12 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
 
 import java.util.Set;
 import java.util.function.Predicate;
 
 public interface Manager {
-    int DEFAULT_DISPLAY_RANGE = 32;
+    double DEFAULT_DISPLAY_RANGE = 32.0D;
 
     @Contract(pure = true)
     boolean isShown(@NotNull Player player);
@@ -25,9 +24,9 @@ public interface Manager {
     void setCanSeeFilter(@Nullable Predicate<Player> filter);
 
     @Contract(pure = true)
-    int getDisplayRange();
+    double getDisplayRange();
 
-    void setDisplayRange(@Range(from = 1, to = Integer.MAX_VALUE) int displayRange);
+    void setDisplayRange(double displayRange);
 
     @Contract(pure = true)
     boolean isAutoUpdate();

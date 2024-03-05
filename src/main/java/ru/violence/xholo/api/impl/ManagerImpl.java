@@ -7,7 +7,6 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
 import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.XHoloPlugin;
 import ru.violence.xholo.api.ArmorStandData;
@@ -36,7 +35,7 @@ import java.util.function.Predicate;
 public final class ManagerImpl implements Manager {
     private final VirtualEntity virtualEntity;
     private final @NotNull Set<Player> viewers = new HashSet<>();
-    private int displayRange;
+    private double displayRange;
     private @Nullable Predicate<Player> canSeeFilter;
     private boolean registered;
     private boolean autoUpdate = true;
@@ -46,7 +45,7 @@ public final class ManagerImpl implements Manager {
         this.displayRange = DEFAULT_DISPLAY_RANGE;
     }
 
-    public ManagerImpl(VirtualEntity virtualEntity, int displayRange) {
+    public ManagerImpl(VirtualEntity virtualEntity, double displayRange) {
         this.virtualEntity = virtualEntity;
         this.displayRange = displayRange;
     }
@@ -129,13 +128,13 @@ public final class ManagerImpl implements Manager {
     }
 
     @Override
-    public int getDisplayRange() {
+    public double getDisplayRange() {
         return displayRange;
     }
 
     @Override
-    public void setDisplayRange(@Range(from = 1, to = Integer.MAX_VALUE) int displayRange) {
-        this.displayRange = Check.moreThan(displayRange, 0, "Display range is 0 or less");
+    public void setDisplayRange(double displayRange) {
+        this.displayRange = Check.moreThan(displayRange, 0.0D, "Display range is 0 or less");
         updateVisibility();
     }
 

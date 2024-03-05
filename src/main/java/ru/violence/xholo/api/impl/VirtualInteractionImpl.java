@@ -15,7 +15,7 @@ import ru.violence.xholo.util.updateflags.UpdateFlags;
 import java.util.List;
 
 public final class VirtualInteractionImpl implements VirtualInteraction {
-    private static final int DISPLAY_RANGE = 7;
+    private static final double DISPLAY_RANGE = 7.5D;
 
     private final int id = NMSUtil.getNextEntityId();
     private final HologramRegistryImpl registry;
