@@ -36,13 +36,19 @@ import java.util.function.Predicate;
 public final class ManagerImpl implements Manager {
     private final VirtualEntity virtualEntity;
     private final @NotNull Set<Player> viewers = new HashSet<>();
-    private int displayRange = DEFAULT_DISPLAY_RANGE;
+    private int displayRange;
     private @Nullable Predicate<Player> canSeeFilter;
     private boolean registered;
     private boolean autoUpdate = true;
 
     public ManagerImpl(VirtualEntity virtualEntity) {
         this.virtualEntity = virtualEntity;
+        this.displayRange = DEFAULT_DISPLAY_RANGE;
+    }
+
+    public ManagerImpl(VirtualEntity virtualEntity, int displayRange) {
+        this.virtualEntity = virtualEntity;
+        this.displayRange = displayRange;
     }
 
     @Override

@@ -15,6 +15,8 @@ import ru.violence.xholo.util.updateflags.UpdateFlags;
 import java.util.List;
 
 public final class VirtualInteractionImpl implements VirtualInteraction {
+    private static final int DISPLAY_RANGE = 7;
+
     private final int id = NMSUtil.getNextEntityId();
     private final HologramRegistryImpl registry;
     private final ManagerImpl manager;
@@ -29,7 +31,7 @@ public final class VirtualInteractionImpl implements VirtualInteraction {
         this.location = Check.notNull(location, "Location is null");
         this.data = Check.notNull(data, "Data is null");
         Check.notNull(location.getWorld(), "World is null");
-        this.manager = new ManagerImpl(this);
+        this.manager = new ManagerImpl(this, DISPLAY_RANGE);
     }
 
     @Override
