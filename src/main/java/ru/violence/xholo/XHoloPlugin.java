@@ -1,8 +1,10 @@
 package ru.violence.xholo;
 
+import com.comphenix.protocol.ProtocolLibrary;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.violence.xholo.api.VirtualEntity;
 import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
+import ru.violence.xholo.hook.PacketListener;
 import ru.violence.xholo.listener.PlayerHideListener;
 import ru.violence.xholo.listener.PluginDisableListener;
 import ru.violence.xholo.task.VisibilityUpdateTask;
@@ -22,6 +24,7 @@ public class XHoloPlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new PlayerHideListener(this), this);
         getServer().getPluginManager().registerEvents(new PluginDisableListener(this), this);
+        ProtocolLibrary.getProtocolManager().addPacketListener(new PacketListener(this));
         new VisibilityUpdateTask(this).runTaskTimer(this, 0, 1);
     }
 

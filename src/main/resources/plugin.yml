@@ -2,4 +2,4 @@ name: xHolo
 main: ru.violence.xholo.XHoloPlugin
 version: $version
 api-version: '$apiVersion'
-depend: [ CoreAPI ]
+depend: [ CoreAPI, ProtocolLib ]

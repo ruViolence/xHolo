@@ -30,6 +30,7 @@ dependencies {
     compileOnly("ru.violence.coreapi:bukkit:0.1.14") {
         isTransitive = false
     }
+    compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0")
     compileOnly("org.jetbrains:annotations:23.1.0")
 }
 
