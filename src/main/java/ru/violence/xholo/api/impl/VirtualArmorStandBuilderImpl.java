@@ -9,10 +9,8 @@ import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ArmorStandData;
 import ru.violence.xholo.api.VirtualArmorStand;
 import ru.violence.xholo.api.VirtualArmorStandBuilder;
-import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
 
 public final class VirtualArmorStandBuilderImpl implements VirtualArmorStandBuilder {
-    private final @NotNull HologramRegistryImpl registry;
     private final @NotNull Plugin plugin;
     private @Nullable Location location;
     private @Nullable ArmorStandData data;
@@ -23,9 +21,8 @@ public final class VirtualArmorStandBuilderImpl implements VirtualArmorStandBuil
     private @Nullable ItemStack chestplate;
     private @Nullable ItemStack helmet;
 
-    public VirtualArmorStandBuilderImpl(@NotNull Plugin plugin, @NotNull HologramRegistryImpl registry) {
+    public VirtualArmorStandBuilderImpl(@NotNull Plugin plugin) {
         this.plugin = Check.notNull(plugin, "Plugin is null");
-        this.registry = Check.notNull(registry, "Registry is null");
     }
 
     @Override
@@ -121,7 +118,6 @@ public final class VirtualArmorStandBuilderImpl implements VirtualArmorStandBuil
     @Override
     public @NotNull VirtualArmorStand build() {
         return new VirtualArmorStandImpl(
-                registry,
                 plugin,
                 location,
                 data,

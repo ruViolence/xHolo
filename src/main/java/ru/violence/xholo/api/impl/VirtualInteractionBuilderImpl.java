@@ -8,17 +8,14 @@ import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.InteractionData;
 import ru.violence.xholo.api.VirtualInteraction;
 import ru.violence.xholo.api.VirtualInteractionBuilder;
-import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
 
 public final class VirtualInteractionBuilderImpl implements VirtualInteractionBuilder {
-    private final @NotNull HologramRegistryImpl registry;
     private final @NotNull Plugin plugin;
     private @Nullable Location location;
     private @Nullable InteractionData data;
 
-    public VirtualInteractionBuilderImpl(@NotNull Plugin plugin, @NotNull HologramRegistryImpl registry) {
+    public VirtualInteractionBuilderImpl(@NotNull Plugin plugin) {
         this.plugin = Check.notNull(plugin, "Plugin is null");
-        this.registry = Check.notNull(registry, "Registry is null");
     }
 
     @Override
@@ -48,7 +45,6 @@ public final class VirtualInteractionBuilderImpl implements VirtualInteractionBu
     @Override
     public @NotNull VirtualInteraction build() {
         return new VirtualInteractionImpl(
-                registry,
                 plugin,
                 location,
                 data

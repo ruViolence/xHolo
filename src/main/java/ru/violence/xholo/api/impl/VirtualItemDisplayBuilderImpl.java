@@ -8,17 +8,14 @@ import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ItemDisplayData;
 import ru.violence.xholo.api.VirtualItemDisplay;
 import ru.violence.xholo.api.VirtualItemDisplayBuilder;
-import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
 
 public final class VirtualItemDisplayBuilderImpl implements VirtualItemDisplayBuilder {
-    private final @NotNull HologramRegistryImpl registry;
     private final @NotNull Plugin plugin;
     private @Nullable Location location;
     private @Nullable ItemDisplayData data;
 
-    public VirtualItemDisplayBuilderImpl(@NotNull Plugin plugin, @NotNull HologramRegistryImpl registry) {
+    public VirtualItemDisplayBuilderImpl(@NotNull Plugin plugin) {
         this.plugin = Check.notNull(plugin, "Plugin is null");
-        this.registry = Check.notNull(registry, "Registry is null");
     }
 
     @Override
@@ -48,7 +45,6 @@ public final class VirtualItemDisplayBuilderImpl implements VirtualItemDisplayBu
     @Override
     public @NotNull VirtualItemDisplay build() {
         return new VirtualItemDisplayImpl(
-                registry,
                 plugin,
                 location,
                 data

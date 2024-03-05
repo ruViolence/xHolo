@@ -7,7 +7,6 @@ import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.InteractionData;
 import ru.violence.xholo.api.Manager;
 import ru.violence.xholo.api.VirtualInteraction;
-import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
 import ru.violence.xholo.util.nms.NMSUtil;
 import ru.violence.xholo.util.updateflags.UpdateFlag;
 import ru.violence.xholo.util.updateflags.UpdateFlags;
@@ -18,15 +17,13 @@ public final class VirtualInteractionImpl implements VirtualInteraction {
     private static final double DISPLAY_RANGE = 7.5D;
 
     private final int id = NMSUtil.getNextEntityId();
-    private final HologramRegistryImpl registry;
     private final ManagerImpl manager;
 
     private final @NotNull Plugin plugin;
     private @NotNull Location location;
     private @NotNull InteractionData data;
 
-    public VirtualInteractionImpl(@NotNull HologramRegistryImpl registry, @NotNull Plugin plugin, @NotNull Location location, @NotNull InteractionData data) {
-        this.registry = Check.notNull(registry, "Registry is null");
+    public VirtualInteractionImpl(@NotNull Plugin plugin, @NotNull Location location, @NotNull InteractionData data) {
         this.plugin = Check.notNull(plugin, "Plugin is null");
         this.location = Check.notNull(location, "Location is null");
         this.data = Check.notNull(data, "Data is null");
@@ -84,10 +81,6 @@ public final class VirtualInteractionImpl implements VirtualInteraction {
                 manager.updateData(flags);
             }
         }
-    }
-
-    @NotNull HologramRegistryImpl getRegistry() {
-        return registry;
     }
 
     @Override

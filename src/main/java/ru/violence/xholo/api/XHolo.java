@@ -21,26 +21,26 @@ public class XHolo {
 
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull VirtualArmorStandBuilder armorStand(@NotNull Plugin plugin) {
-        return new VirtualArmorStandBuilderImpl(plugin, XHoloPlugin.getInstance().getRegistry());
+        return new VirtualArmorStandBuilderImpl(plugin);
     }
 
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull VirtualBlockDisplayBuilder blockDisplay(@NotNull Plugin plugin) {
-        return new VirtualBlockDisplayBuilderImpl(plugin, XHoloPlugin.getInstance().getRegistry());
+        return new VirtualBlockDisplayBuilderImpl(plugin);
     }
 
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull VirtualItemDisplayBuilder itemDisplay(@NotNull Plugin plugin) {
-        return new VirtualItemDisplayBuilderImpl(plugin, XHoloPlugin.getInstance().getRegistry());
+        return new VirtualItemDisplayBuilderImpl(plugin);
     }
 
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull VirtualTextDisplayBuilder textDisplay(@NotNull Plugin plugin) {
-        return new VirtualTextDisplayBuilderImpl(plugin, XHoloPlugin.getInstance().getRegistry());
+        return new VirtualTextDisplayBuilderImpl(plugin);
     }
 
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull VirtualInteractionBuilder interaction(@NotNull Plugin plugin) {
-        return new VirtualInteractionBuilderImpl(plugin, XHoloPlugin.getInstance().getRegistry());
+        return new VirtualInteractionBuilderImpl(plugin);
     }
 }

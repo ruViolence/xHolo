@@ -10,7 +10,6 @@ import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ArmorStandData;
 import ru.violence.xholo.api.Manager;
 import ru.violence.xholo.api.VirtualArmorStand;
-import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
 import ru.violence.xholo.util.nms.NMSUtil;
 import ru.violence.xholo.util.updateflags.UpdateFlag;
 import ru.violence.xholo.util.updateflags.UpdateFlags;
@@ -19,7 +18,6 @@ import java.util.List;
 
 public final class VirtualArmorStandImpl implements VirtualArmorStand {
     private final int id = NMSUtil.getNextEntityId();
-    private final HologramRegistryImpl registry;
     private final ManagerImpl manager;
 
     private final @NotNull Plugin plugin;
@@ -32,14 +30,13 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
     private @Nullable ItemStack chestplate;
     private @Nullable ItemStack helmet;
 
-    public VirtualArmorStandImpl(@NotNull HologramRegistryImpl registry, @NotNull Plugin plugin, @NotNull Location location, @NotNull ArmorStandData data,
+    public VirtualArmorStandImpl(@NotNull Plugin plugin, @NotNull Location location, @NotNull ArmorStandData data,
                                  @Nullable ItemStack itemInHand,
                                  @Nullable ItemStack itemInOffHand,
                                  @Nullable ItemStack boots,
                                  @Nullable ItemStack leggings,
                                  @Nullable ItemStack chestplate,
                                  @Nullable ItemStack helmet) {
-        this.registry = Check.notNull(registry, "Registry is null");
         this.plugin = Check.notNull(plugin, "Plugin is null");
         this.location = Check.notNull(location, "Location is null");
         this.data = Check.notNull(data, "Data is null");
@@ -181,10 +178,6 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
             this.helmet = item;
             manager.updateEquipment(EquipmentSlot.HEAD, item);
         }
-    }
-
-    @NotNull HologramRegistryImpl getRegistry() {
-        return registry;
     }
 
     @Override

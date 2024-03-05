@@ -7,7 +7,6 @@ import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ItemDisplayData;
 import ru.violence.xholo.api.Manager;
 import ru.violence.xholo.api.VirtualItemDisplay;
-import ru.violence.xholo.api.registry.impl.HologramRegistryImpl;
 import ru.violence.xholo.util.nms.NMSUtil;
 import ru.violence.xholo.util.updateflags.UpdateFlag;
 import ru.violence.xholo.util.updateflags.UpdateFlags;
@@ -16,15 +15,13 @@ import java.util.List;
 
 public final class VirtualItemDisplayImpl implements VirtualItemDisplay {
     private final int id = NMSUtil.getNextEntityId();
-    private final HologramRegistryImpl registry;
     private final ManagerImpl manager;
 
     private final @NotNull Plugin plugin;
     private @NotNull Location location;
     private @NotNull ItemDisplayData data;
 
-    public VirtualItemDisplayImpl(@NotNull HologramRegistryImpl registry, @NotNull Plugin plugin, @NotNull Location location, @NotNull ItemDisplayData data) {
-        this.registry = Check.notNull(registry, "Registry is null");
+    public VirtualItemDisplayImpl(@NotNull Plugin plugin, @NotNull Location location, @NotNull ItemDisplayData data) {
         this.plugin = Check.notNull(plugin, "Plugin is null");
         this.location = Check.notNull(location, "Location is null");
         this.data = Check.notNull(data, "Data is null");
@@ -82,10 +79,6 @@ public final class VirtualItemDisplayImpl implements VirtualItemDisplay {
                 manager.updateData(flags);
             }
         }
-    }
-
-    @NotNull HologramRegistryImpl getRegistry() {
-        return registry;
     }
 
     @Override
