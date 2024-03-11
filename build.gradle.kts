@@ -34,6 +34,29 @@ dependencies {
     compileOnly("org.jetbrains:annotations:23.1.0")
 }
 
+publishing {
+    publications {
+        register("mavenJava", MavenPublication::class) {
+            artifact(tasks.getByName("jar")) {
+                artifactId = project.name
+                classifier = ""
+            }
+            pom.withXml {
+                val dependenciesNode = asNode().appendNode("dependencies")
+                configurations["compileClasspath"].allDependencies.forEach {
+                    val dependencyNode = dependenciesNode.appendNode("dependency")
+                    dependencyNode.appendNode("groupId", it.group)
+                    dependencyNode.appendNode("artifactId", it.name)
+                    dependencyNode.appendNode("version", it.version)
+                }
+            }
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+
 tasks {
     assemble {
         dependsOn(reobfJar)
