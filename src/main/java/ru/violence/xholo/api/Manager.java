@@ -18,6 +18,8 @@ public interface Manager {
 
     boolean hide(@NotNull Player player);
 
+    void hideAll();
+
     @Contract(pure = true)
     @Nullable Predicate<Player> getCanSeeFilter();
 

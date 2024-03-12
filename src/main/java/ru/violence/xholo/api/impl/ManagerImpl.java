@@ -107,6 +107,7 @@ public final class ManagerImpl implements Manager {
         }
     }
 
+    @Override
     public void hideAll() {
         synchronized (virtualEntity) {
             for (Player player : viewers) {
