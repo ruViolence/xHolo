@@ -284,8 +284,12 @@ public final class ManagerImpl implements Manager {
         }
     }
 
-    void updateLocation() {
+    void updateLocation(boolean isWorldChanged) {
         synchronized (virtualEntity) {
+            if (isWorldChanged) {
+                hideAll();
+            }
+
             updateVisibility();
 
             int entityId = virtualEntity.getEntityId();

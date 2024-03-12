@@ -49,8 +49,9 @@ public final class VirtualTextDisplayImpl implements VirtualTextDisplay {
         Check.notNull(location, "Location is null");
         Check.notNull(location.getWorld(), "World is null");
         synchronized (this) {
+            boolean isWorldChanged = !this.location.getWorld().equals(location.getWorld());
             this.location = location;
-            manager.updateLocation();
+            manager.updateLocation(isWorldChanged);
         }
     }
 
