@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public final class ManagerImpl implements Manager {
@@ -198,6 +199,10 @@ public final class ManagerImpl implements Manager {
     }
 
     public void updateVisibility() {
+        updateVisibility(null);
+    }
+
+    public void updateVisibility(@Nullable Consumer<Player> onUpdate) {
         if (!registered) return;
         if (!autoUpdate) return;
 
@@ -222,6 +227,8 @@ public final class ManagerImpl implements Manager {
                     if (isShown(player)) {
                         if (!passedFilter) {
                             hide(player);
+                        } else {
+                            if (onUpdate != null) onUpdate.accept(player);
                         }
                     } else {
                         if (passedFilter) {
@@ -291,14 +298,12 @@ public final class ManagerImpl implements Manager {
                 hideAll();
             }
 
-            updateVisibility();
+            updateVisibility(player -> {
+                int entityId = virtualEntity.getEntityId();
+                Location location = virtualEntity.getLocation();
 
-            int entityId = virtualEntity.getEntityId();
-            Location location = virtualEntity.getLocation();
-
-            for (Player player : viewers) {
                 NMSUtil.teleportEntity(player, entityId, location);
-            }
+            });
         }
     }
 }
