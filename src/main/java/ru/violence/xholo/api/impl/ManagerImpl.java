@@ -211,9 +211,19 @@ public final class ManagerImpl implements Manager {
                 boolean isInRange = Utils.isInDisplayRange(player, veLoc, getDisplayRange());
 
                 if (isInRange) {
-                    if (!isShown(player)) {
-                        Predicate<Player> filter = getCanSeeFilter();
-                        if (filter == null || filter.test(player)) {
+                    boolean passedFilter = false;
+
+                    Predicate<Player> filter = getCanSeeFilter();
+                    if (filter == null || filter.test(player)) {
+                        passedFilter = true;
+                    }
+
+                    if (isShown(player)) {
+                        if (!passedFilter) {
+                            hide(player);
+                        }
+                    } else {
+                        if (passedFilter) {
                             show(player);
                         }
                     }
