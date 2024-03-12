@@ -107,7 +107,7 @@ public class NMSUtil {
     private final EntityDataAccessor<Float> DP_INTERACTION_HEIGHT = ReflectionUtil.getFieldValue(Interaction.class, null, "d");
     private final EntityDataAccessor<Boolean> DP_INTERACTION_RESPONSE = ReflectionUtil.getFieldValue(Interaction.class, null, "e");
 
-    private final ReflectMethod<Integer> METHOD_TRACKEDENTITY_GETEFFECTIVERANGE = new ReflectMethod<>(ChunkMap.TrackedEntity.class, "b", (Class<?>[]) null);
+    private final ReflectMethod<Integer> METHOD_TRACKEDENTITY_GETEFFECTIVERANGE = new ReflectMethod<>(ChunkMap.TrackedEntity.class, "b");
 
     public boolean isRealPlayer(@NotNull Player player) {
         if (player instanceof CraftPlayer) {
@@ -769,7 +769,9 @@ public class NMSUtil {
     }
 
     public int getFurthestViewableBlock(@NotNull Player player) {
-        return METHOD_TRACKEDENTITY_GETEFFECTIVERANGE.invoke(((CraftPlayer) player).getHandle().tracker);
+        ChunkMap.TrackedEntity tracker = ((CraftPlayer) player).getHandle().tracker;
+        if (tracker == null) return 0;
+        return METHOD_TRACKEDENTITY_GETEFFECTIVERANGE.invoke(tracker);
     }
 
     private void setDWEntityFlags(@NotNull SynchedEntityData watcher, boolean invisible, boolean glowing) {
