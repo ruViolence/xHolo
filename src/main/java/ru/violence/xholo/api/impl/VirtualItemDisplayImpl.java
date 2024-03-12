@@ -50,8 +50,11 @@ public final class VirtualItemDisplayImpl implements VirtualItemDisplay {
         Check.notNull(location.getWorld(), "World is null");
         synchronized (this) {
             boolean isWorldChanged = !this.location.getWorld().equals(location.getWorld());
+            boolean isLocationChanged = isWorldChanged || !this.location.equals(location);
             this.location = location;
-            manager.updateLocation(isWorldChanged);
+            if (isLocationChanged) {
+                manager.updateLocation(isWorldChanged);
+            }
         }
     }
 
