@@ -1,5 +1,6 @@
 package ru.violence.xholo.api;
 
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +47,10 @@ public interface Manager {
 
     @Contract(pure = true)
     boolean isRegistered();
+
+    @Nullable Entity getVehicle();
+
+    void setVehicle(@Nullable Entity vehicle);
 
     void register();
 

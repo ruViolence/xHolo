@@ -14,6 +14,7 @@ import net.minecraft.network.protocol.game.ClientboundBundlePacket;
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
+import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -142,10 +143,45 @@ public class NMSUtil {
         sendPacket(player, new ClientboundBundlePacket(packets));
     }
 
+    public void spawnEntityArmorStand(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ArmorStandData data, @NotNull org.bukkit.entity.Entity vehicle,
+                                      @Nullable ItemStack mainHandItem,
+                                      @Nullable ItemStack offHandItem,
+                                      @Nullable ItemStack headItem,
+                                      @Nullable ItemStack chestItem,
+                                      @Nullable ItemStack legsItem,
+                                      @Nullable ItemStack feetItem) {
+        List<Packet<ClientGamePacketListener>> packets = new ArrayList<>(3);
+
+        packets.add(createSpawnEntityPacket(location, entityId, EntityType.ARMOR_STAND));
+        packets.add(createSetArmorStandMetadataPacket(player, entityId, data, null));
+
+        ClientboundSetEquipmentPacket equipmentPacket = createEquipmentPacket(entityId, new Map.Entry[]{
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.HAND, mainHandItem),
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.OFF_HAND, offHandItem),
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.HEAD, headItem),
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.CHEST, chestItem),
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.LEGS, legsItem),
+                new AbstractMap.SimpleEntry<>(EquipmentSlot.FEET, feetItem)
+        }, true);
+        if (equipmentPacket != null) packets.add(equipmentPacket);
+
+        packets.add(createSetPassengersPacket(vehicle.getEntityId(), entityId));
+
+        sendPacket(player, new ClientboundBundlePacket(packets));
+    }
+
     public void spawnEntityBlockDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull BlockDisplayData data) {
         sendPacket(player, new ClientboundBundlePacket(List.of(
                 createSpawnEntityPacket(location, entityId, EntityType.BLOCK_DISPLAY),
                 createSetBlockDisplayMetadataPacket(entityId, data, null)
+        )));
+    }
+
+    public void spawnEntityBlockDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull BlockDisplayData data, @NotNull org.bukkit.entity.Entity vehicle) {
+        sendPacket(player, new ClientboundBundlePacket(List.of(
+                createSpawnEntityPacket(location, entityId, EntityType.BLOCK_DISPLAY),
+                createSetBlockDisplayMetadataPacket(entityId, data, null),
+                createSetPassengersPacket(vehicle.getEntityId(), entityId)
         )));
     }
 
@@ -156,6 +192,14 @@ public class NMSUtil {
         )));
     }
 
+    public void spawnEntityItemDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ItemDisplayData data, @NotNull org.bukkit.entity.Entity vehicle) {
+        sendPacket(player, new ClientboundBundlePacket(List.of(
+                createSpawnEntityPacket(location, entityId, EntityType.ITEM_DISPLAY),
+                createSetItemDisplayMetadataPacket(entityId, data, null),
+                createSetPassengersPacket(vehicle.getEntityId(), entityId)
+        )));
+    }
+
     public void spawnEntityTextDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull TextDisplayData data) {
         sendPacket(player, new ClientboundBundlePacket(List.of(
                 createSpawnEntityPacket(location, entityId, EntityType.TEXT_DISPLAY),
@@ -163,10 +207,26 @@ public class NMSUtil {
         )));
     }
 
+    public void spawnEntityTextDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull TextDisplayData data, @NotNull org.bukkit.entity.Entity vehicle) {
+        sendPacket(player, new ClientboundBundlePacket(List.of(
+                createSpawnEntityPacket(location, entityId, EntityType.TEXT_DISPLAY),
+                createSetTextDisplayMetadataPacket(player, entityId, data, null),
+                createSetPassengersPacket(vehicle.getEntityId(), entityId)
+        )));
+    }
+
     public void spawnEntityInteraction(@NotNull Player player, int entityId, @NotNull Location location, @NotNull InteractionData data) {
         sendPacket(player, new ClientboundBundlePacket(List.of(
                 createSpawnEntityPacket(location, entityId, EntityType.INTERACTION),
                 createSetInteractionMetadataPacket(player, entityId, data, null)
+        )));
+    }
+
+    public void spawnEntityInteraction(@NotNull Player player, int entityId, @NotNull Location location, @NotNull InteractionData data, @NotNull org.bukkit.entity.Entity vehicle) {
+        sendPacket(player, new ClientboundBundlePacket(List.of(
+                createSpawnEntityPacket(location, entityId, EntityType.INTERACTION),
+                createSetInteractionMetadataPacket(player, entityId, data, null),
+                createSetPassengersPacket(vehicle.getEntityId(), entityId)
         )));
     }
 
@@ -298,6 +358,15 @@ public class NMSUtil {
 
     public void destroyEntities(@NotNull Player player, int @NotNull ... entityIds) {
         sendPacket(player, new ClientboundRemoveEntitiesPacket(entityIds));
+    }
+
+    public @NotNull ClientboundSetPassengersPacket createSetPassengersPacket(int vehicleId, int @NotNull ... passengerIds) {
+        FriendlyByteBuf fbb = new FriendlyByteBuf(Unpooled.buffer());
+
+        fbb.writeVarInt(vehicleId);
+        fbb.writeVarIntArray(passengerIds);
+
+        return new ClientboundSetPassengersPacket(fbb);
     }
 
     public void sendPacket(@NotNull Player player, @NotNull Object packet) {

@@ -2,6 +2,7 @@ package ru.violence.xholo.api.impl;
 
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -40,6 +41,7 @@ public final class ManagerImpl implements Manager {
     private @Nullable Predicate<Player> canSeeFilter;
     private boolean registered;
     private boolean autoUpdate = true;
+    private @Nullable Entity vehicle;
 
     public ManagerImpl(VirtualEntity virtualEntity) {
         this.virtualEntity = virtualEntity;
@@ -84,6 +86,38 @@ public final class ManagerImpl implements Manager {
                 NMSUtil.spawnEntityTextDisplay(player, entityId, vbd.getLocation(), vbd.getData());
             } else if (virtualEntity instanceof VirtualInteraction vbd) {
                 NMSUtil.spawnEntityInteraction(player, entityId, vbd.getLocation(), vbd.getData());
+            } else {
+                throw new IllegalStateException("Unknown entity type: " + virtualEntity.getClass().getSimpleName());
+            }
+
+            return true;
+        }
+    }
+
+    public boolean showAsPassenger(@NotNull Player player, @NotNull Entity vehicle) {
+        synchronized (virtualEntity) {
+            if (isShown(player)) return false;
+
+            viewers.add(player);
+
+            int entityId = virtualEntity.getEntityId();
+
+            if (virtualEntity instanceof VirtualArmorStand vas) {
+                NMSUtil.spawnEntityArmorStand(player, entityId, vehicle.getLocation(), vas.getData(), vehicle,
+                        vas.getItemInHand(),
+                        vas.getItemInOffHand(),
+                        vas.getHelmet(),
+                        vas.getChestplate(),
+                        vas.getLeggings(),
+                        vas.getBoots());
+            } else if (virtualEntity instanceof VirtualBlockDisplay vbd) {
+                NMSUtil.spawnEntityBlockDisplay(player, entityId, vehicle.getLocation(), vbd.getData(), vehicle);
+            } else if (virtualEntity instanceof VirtualItemDisplay vid) {
+                NMSUtil.spawnEntityItemDisplay(player, entityId, vehicle.getLocation(), vid.getData(), vehicle);
+            } else if (virtualEntity instanceof VirtualTextDisplay vbd) {
+                NMSUtil.spawnEntityTextDisplay(player, entityId, vehicle.getLocation(), vbd.getData(), vehicle);
+            } else if (virtualEntity instanceof VirtualInteraction vbd) {
+                NMSUtil.spawnEntityInteraction(player, entityId, vehicle.getLocation(), vbd.getData(), vehicle);
             } else {
                 throw new IllegalStateException("Unknown entity type: " + virtualEntity.getClass().getSimpleName());
             }
@@ -177,6 +211,21 @@ public final class ManagerImpl implements Manager {
     }
 
     @Override
+    public @Nullable Entity getVehicle() {
+        synchronized (virtualEntity) {
+            return vehicle;
+        }
+    }
+
+    @Override
+    public void setVehicle(@Nullable Entity vehicle) {
+        synchronized (virtualEntity) {
+            hideAll();
+            this.vehicle = vehicle;
+        }
+    }
+
+    @Override
     public void register() {
         synchronized (virtualEntity) {
             if (registered) return;
@@ -207,6 +256,33 @@ public final class ManagerImpl implements Manager {
         if (!autoUpdate) return;
 
         synchronized (virtualEntity) {
+            Entity vehicle = getVehicle();
+            if (vehicle != null) {
+                if (!vehicle.isValid() || !vehicle.isEmpty()) {
+                    hideAll();
+                    return;
+                }
+
+                Set<Player> trackedBy = vehicle.getTrackedBy();
+
+                for (Player viewer : getViewers()) {
+                    if (!trackedBy.contains(viewer)) {
+                        hide(viewer);
+                    }
+                }
+
+                for (Player player : trackedBy) {
+                    if (player.equals(vehicle)) {
+                        hide(player);
+                        continue;
+                    }
+
+                    showAsPassenger(player, vehicle);
+                }
+
+                return;
+            }
+
             Location veLoc = virtualEntity.getLocation();
             World world = veLoc.getWorld();
 
