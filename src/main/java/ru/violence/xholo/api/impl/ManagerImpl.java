@@ -277,7 +277,17 @@ public final class ManagerImpl implements Manager {
                         continue;
                     }
 
-                    showAsPassenger(player, vehicle);
+                    boolean passedFilter = isPassingCanSeeFilter(player);
+
+                    if (isShown(player)) {
+                        if (!passedFilter) {
+                            hide(player);
+                        }
+                    } else {
+                        if (passedFilter) {
+                            showAsPassenger(player, vehicle);
+                        }
+                    }
                 }
 
                 return;
@@ -293,12 +303,7 @@ public final class ManagerImpl implements Manager {
                 boolean isInRange = Utils.isInDisplayRange(player, veLoc, getDisplayRange());
 
                 if (isInRange) {
-                    boolean passedFilter = false;
-
-                    Predicate<Player> filter = getCanSeeFilter();
-                    if (filter == null || filter.test(player)) {
-                        passedFilter = true;
-                    }
+                    boolean passedFilter = isPassingCanSeeFilter(player);
 
                     if (isShown(player)) {
                         if (!passedFilter) {
@@ -316,6 +321,11 @@ public final class ManagerImpl implements Manager {
                 }
             }
         }
+    }
+
+    public boolean isPassingCanSeeFilter(@NotNull Player player) {
+        Predicate<Player> filter = getCanSeeFilter();
+        return filter == null || filter.test(player);
     }
 
     void updateData(@NotNull List<UpdateFlag<?>> flags) {
