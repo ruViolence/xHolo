@@ -41,15 +41,13 @@ public final class HologramRegistryImpl implements HologramRegistry {
 
     @Override
     public @Nullable VirtualEntity getFromId(int entityId) {
+        VirtualEntity ve;
+
         lock.readLock().lock();
-        for (VirtualEntity ve : virtualEntities.values()) {
-            if (ve.getEntityId() == entityId) {
-                return ve;
-            }
-        }
+        ve = virtualEntities.get(entityId);
         lock.readLock().unlock();
 
-        return null;
+        return ve;
     }
 
     @Override
