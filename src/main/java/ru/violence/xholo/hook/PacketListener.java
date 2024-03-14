@@ -29,6 +29,9 @@ public class PacketListener extends PacketAdapter {
 
     @Override
     public void onPacketReceiving(PacketEvent event) {
+        if (event.isCancelled()) return;
+        if (event.isPlayerTemporary()) return;
+
         int entityId = event.getPacket().getIntegers().read(0);
 
         VirtualEntity ve = holoPlugin.getRegistry().getFromId(entityId);
