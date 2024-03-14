@@ -10,15 +10,15 @@ import ru.violence.xholo.api.VirtualEntity;
 import ru.violence.xholo.api.registry.HologramRegistry;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public final class HologramRegistryImpl implements HologramRegistry {
     private final XHoloPlugin plugin;
-    private final Set<VirtualEntity> virtualEntities = new HashSet<>();
+    private final Map<Integer, VirtualEntity> virtualEntities = new HashMap<>();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public HologramRegistryImpl(XHoloPlugin plugin) {
@@ -28,7 +28,7 @@ public final class HologramRegistryImpl implements HologramRegistry {
     public void register(@NotNull VirtualEntity ve) {
         Check.notNull(ve, "VirtualEntity is null");
         lock.writeLock().lock();
-        virtualEntities.add(ve);
+        virtualEntities.put(ve.getEntityId(), ve);
         lock.writeLock().unlock();
     }
 
@@ -42,7 +42,7 @@ public final class HologramRegistryImpl implements HologramRegistry {
     @Override
     public @Nullable VirtualEntity getFromId(int entityId) {
         lock.readLock().lock();
-        for (VirtualEntity ve : virtualEntities) {
+        for (VirtualEntity ve : virtualEntities.values()) {
             if (ve.getEntityId() == entityId) {
                 return ve;
             }
@@ -58,7 +58,7 @@ public final class HologramRegistryImpl implements HologramRegistry {
         List<VirtualEntity> list = new ArrayList<>();
 
         lock.readLock().lock();
-        for (VirtualEntity ve : virtualEntities) {
+        for (VirtualEntity ve : virtualEntities.values()) {
             if (ve.getLocation().getWorld().equals(world)) {
                 list.add(ve);
             }
@@ -71,7 +71,7 @@ public final class HologramRegistryImpl implements HologramRegistry {
     @Override
     public @NotNull List<VirtualEntity> getAll() {
         lock.readLock().lock();
-        List<VirtualEntity> list = new ArrayList<>(virtualEntities);
+        List<VirtualEntity> list = new ArrayList<>(virtualEntities.values());
         lock.readLock().unlock();
 
         return list;
@@ -83,7 +83,7 @@ public final class HologramRegistryImpl implements HologramRegistry {
         List<VirtualEntity> list = new ArrayList<>();
 
         lock.readLock().lock();
-        for (VirtualEntity ve : virtualEntities) {
+        for (VirtualEntity ve : virtualEntities.values()) {
             if (ve.manager().isVisibleFor(player)) {
                 list.add(ve);
             }
