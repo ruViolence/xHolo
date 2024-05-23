@@ -37,8 +37,10 @@ public class PacketListener extends PacketAdapter {
         VirtualEntity ve = holoPlugin.getRegistry().getFromId(entityId);
         if (ve == null) return;
 
-        event.setCancelled(true);
         Player player = event.getPlayer();
+        if (!ve.manager().isVisibleFor(player)) return;
+
+        event.setCancelled(true);
 
         if (ve instanceof VirtualInteraction vi) {
             WrappedEnumEntityUseAction useAction = event.getPacket().getEnumEntityUseActions().read(0);
