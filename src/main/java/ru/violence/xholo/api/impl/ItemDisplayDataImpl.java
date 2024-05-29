@@ -4,18 +4,18 @@ import lombok.Getter;
 import org.bukkit.Color;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.violence.coreapi.common.api.util.Check;
+import ru.violence.xholo.api.CustomItem;
 import ru.violence.xholo.api.ItemDisplayData;
 import ru.violence.xholo.api.ItemDisplayDataBuilder;
 import ru.violence.xholo.util.UniqueInt;
 
 @Getter
 public final class ItemDisplayDataImpl extends DisplayDataImpl implements ItemDisplayData {
-    private final @Nullable ItemStack itemStack;
+    private final @Nullable CustomItem item;
     private final ItemDisplay.@NotNull ItemDisplayTransform displayTransform;
 
     public ItemDisplayDataImpl(boolean visible,
@@ -31,7 +31,7 @@ public final class ItemDisplayDataImpl extends DisplayDataImpl implements ItemDi
                                @NotNull Display.Billboard billboard,
                                @Nullable Color glowColorOverride,
                                @Nullable Display.Brightness brightness,
-                               @Nullable ItemStack itemStack,
+                               @Nullable CustomItem item,
                                ItemDisplay.@NotNull ItemDisplayTransform displayTransform) {
         super(visible,
                 glowing,
@@ -46,7 +46,7 @@ public final class ItemDisplayDataImpl extends DisplayDataImpl implements ItemDi
                 billboard,
                 glowColorOverride,
                 brightness);
-        this.itemStack = itemStack;
+        this.item = item;
         this.displayTransform = Check.notNull(displayTransform, "DisplayTransform is null");
     }
 

@@ -3,7 +3,6 @@ package ru.violence.xholo.api;
 import org.bukkit.Color;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -63,10 +62,10 @@ public interface ItemDisplayDataBuilder extends DisplayDataBuilder {
     @NotNull ItemDisplayDataBuilder brightness(Display.@Nullable Brightness brightness);
 
     @Contract(pure = true)
-    @Nullable ItemStack itemStack();
+    @Nullable CustomItem item();
 
     @Contract(value = "_ -> this")
-    @NotNull ItemDisplayDataBuilder itemStack(@Nullable ItemStack item);
+    @NotNull ItemDisplayDataBuilder item(@Nullable CustomItem supplier);
 
     @Contract(pure = true)
     ItemDisplay.@NotNull ItemDisplayTransform displayTransform();

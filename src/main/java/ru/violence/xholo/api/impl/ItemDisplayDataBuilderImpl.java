@@ -3,17 +3,17 @@ package ru.violence.xholo.api.impl;
 import org.bukkit.Color;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 import ru.violence.coreapi.common.api.util.Check;
+import ru.violence.xholo.api.CustomItem;
 import ru.violence.xholo.api.ItemDisplayData;
 import ru.violence.xholo.api.ItemDisplayDataBuilder;
 
 public final class ItemDisplayDataBuilderImpl extends DisplayDataBuilderImpl implements ItemDisplayDataBuilder {
-    private @Nullable ItemStack item;
+    private @Nullable CustomItem item;
     private ItemDisplay.@NotNull ItemDisplayTransform displayTransform;
 
     public ItemDisplayDataBuilderImpl() {
@@ -22,7 +22,7 @@ public final class ItemDisplayDataBuilderImpl extends DisplayDataBuilderImpl imp
 
     public ItemDisplayDataBuilderImpl(@NotNull ItemDisplayDataImpl data) {
         super(data);
-        this.item = data.getItemStack();
+        this.item = data.getItem();
         this.displayTransform = data.getDisplayTransform();
     }
 
@@ -104,12 +104,12 @@ public final class ItemDisplayDataBuilderImpl extends DisplayDataBuilderImpl imp
     }
 
     @Override
-    public @Nullable ItemStack itemStack() {
+    public @Nullable CustomItem item() {
         return this.item;
     }
 
     @Override
-    public @NotNull ItemDisplayDataBuilder itemStack(@Nullable ItemStack item) {
+    public @NotNull ItemDisplayDataBuilder item(@Nullable CustomItem item) {
         this.item = item;
         return this;
     }

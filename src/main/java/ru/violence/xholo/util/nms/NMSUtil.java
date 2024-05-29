@@ -48,6 +48,7 @@ import ru.violence.coreapi.common.api.reflection.ReflectionUtil;
 import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ArmorStandData;
 import ru.violence.xholo.api.BlockDisplayData;
+import ru.violence.xholo.api.CustomItem;
 import ru.violence.xholo.api.InteractionData;
 import ru.violence.xholo.api.ItemDisplayData;
 import ru.violence.xholo.api.TextDisplayData;
@@ -188,14 +189,14 @@ public class NMSUtil {
     public void spawnEntityItemDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ItemDisplayData data) {
         sendPacket(player, new ClientboundBundlePacket(List.of(
                 createSpawnEntityPacket(location, entityId, EntityType.ITEM_DISPLAY),
-                createSetItemDisplayMetadataPacket(entityId, data, null)
+                createSetItemDisplayMetadataPacket(player, entityId, data, null)
         )));
     }
 
     public void spawnEntityItemDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ItemDisplayData data, @NotNull org.bukkit.entity.Entity vehicle) {
         sendPacket(player, new ClientboundBundlePacket(List.of(
                 createSpawnEntityPacket(location, entityId, EntityType.ITEM_DISPLAY),
-                createSetItemDisplayMetadataPacket(entityId, data, null),
+                createSetItemDisplayMetadataPacket(player, entityId, data, null),
                 createSetPassengersPacket(vehicle.getEntityId(), entityId)
         )));
     }
@@ -239,7 +240,7 @@ public class NMSUtil {
     }
 
     public void updateItemDisplayMetadata(@NotNull Player player, int entityId, @NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
-        sendPacket(player, createSetItemDisplayMetadataPacket(entityId, data, flags));
+        sendPacket(player, createSetItemDisplayMetadataPacket(player, entityId, data, flags));
     }
 
     public void updateTextDisplayMetadata(@NotNull Player player, int entityId, @NotNull TextDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
@@ -313,10 +314,10 @@ public class NMSUtil {
     }
 
     @Contract(pure = true)
-    public @NotNull ClientboundSetEntityDataPacket createSetItemDisplayMetadataPacket(int entityId, @NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+    public @NotNull ClientboundSetEntityDataPacket createSetItemDisplayMetadataPacket(@NotNull Player player, int entityId, @NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
         SynchedEntityData watcher = flags == null || flags.isEmpty()
-                ? createItemDisplayDataWatcher(data)
-                : createItemDisplayDataWatcher(data, flags);
+                ? createItemDisplayDataWatcher(player, data)
+                : createItemDisplayDataWatcher(player, data, flags);
 
         List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
         return new ClientboundSetEntityDataPacket(entityId, dataValues);
@@ -517,7 +518,7 @@ public class NMSUtil {
     }
 
     @Contract(pure = true)
-    private @NotNull SynchedEntityData createItemDisplayDataWatcher(@NotNull ItemDisplayData data) {
+    private @NotNull SynchedEntityData createItemDisplayDataWatcher(@NotNull Player player, @NotNull ItemDisplayData data) {
         SynchedEntityData watcher = new SynchedEntityData(null);
 
         // Set entity flags
@@ -546,7 +547,8 @@ public class NMSUtil {
         } // Set display data
 
         { // Set item display data
-            defineDataValue(watcher, DP_ITEM_DISPLAY_ITEM, CraftItemStack.asNMSCopy(data.getItemStack()));
+            CustomItem customItem = data.getItem();
+            defineDataValue(watcher, DP_ITEM_DISPLAY_ITEM, CraftItemStack.asNMSCopy(customItem != null ? customItem.apply(player) : null));
             defineDataValue(watcher, DP_ITEM_DISPLAY_TRANSFORM, ItemDisplayContext.BY_ID.apply(data.getDisplayTransform().ordinal()).getId());
         } // Set item display data
 
@@ -554,8 +556,8 @@ public class NMSUtil {
     }
 
     @Contract(pure = true)
-    public @NotNull SynchedEntityData createItemDisplayDataWatcher(@NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
-        if (flags == null || flags.isEmpty()) return createItemDisplayDataWatcher(data);
+    public @NotNull SynchedEntityData createItemDisplayDataWatcher(@NotNull Player player, @NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+        if (flags == null || flags.isEmpty()) return createItemDisplayDataWatcher(player, data);
 
         SynchedEntityData watcher = new SynchedEntityData(null);
 
@@ -586,7 +588,8 @@ public class NMSUtil {
                 int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
                 defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
             } else if (flag.equals(UpdateFlags.ITEM_DISPLAY_ITEM)) {
-                defineDataValue(watcher, DP_ITEM_DISPLAY_ITEM, CraftItemStack.asNMSCopy(data.getItemStack()));
+                CustomItem customItem = data.getItem();
+                defineDataValue(watcher, DP_ITEM_DISPLAY_ITEM, CraftItemStack.asNMSCopy(customItem != null ? customItem.apply(player) : null));
             } else if (flag.equals(UpdateFlags.ITEM_DISPLAY_TRANSFORM)) {
                 defineDataValue(watcher, DP_ITEM_DISPLAY_TRANSFORM, ItemDisplayContext.BY_ID.apply(data.getDisplayTransform().ordinal()).getId());
             } else {

@@ -151,7 +151,7 @@ public class UpdateFlags {
     public final UpdateFlag<ItemDisplayData> ITEM_DISPLAY_ITEM = new UpdateFlag<>(21) {
         @Override
         public boolean isChanged(ItemDisplayData o, ItemDisplayData n) {
-            return !Objects.equals(o.getItemStack(), n.getItemStack());
+            return !Objects.equals(o.getItem(), n.getItem());
         }
     };
     public final UpdateFlag<ItemDisplayData> ITEM_DISPLAY_TRANSFORM = new UpdateFlag<>(22) {
