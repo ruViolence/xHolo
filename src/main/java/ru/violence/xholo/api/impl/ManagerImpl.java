@@ -82,10 +82,10 @@ public final class ManagerImpl implements Manager {
                 NMSUtil.spawnEntityBlockDisplay(player, entityId, vbd.getLocation(), vbd.getData());
             } else if (virtualEntity instanceof VirtualItemDisplay vid) {
                 NMSUtil.spawnEntityItemDisplay(player, entityId, vid.getLocation(), vid.getData());
-            } else if (virtualEntity instanceof VirtualTextDisplay vbd) {
-                NMSUtil.spawnEntityTextDisplay(player, entityId, vbd.getLocation(), vbd.getData());
-            } else if (virtualEntity instanceof VirtualInteraction vbd) {
-                NMSUtil.spawnEntityInteraction(player, entityId, vbd.getLocation(), vbd.getData());
+            } else if (virtualEntity instanceof VirtualTextDisplay vtd) {
+                NMSUtil.spawnEntityTextDisplay(player, entityId, vtd.getLocation(), vtd.getData());
+            } else if (virtualEntity instanceof VirtualInteraction vi) {
+                NMSUtil.spawnEntityInteraction(player, entityId, vi.getLocation(), vi.getData());
             } else {
                 throw new IllegalStateException("Unknown entity type: " + virtualEntity.getClass().getSimpleName());
             }
@@ -114,10 +114,10 @@ public final class ManagerImpl implements Manager {
                 NMSUtil.spawnEntityBlockDisplay(player, entityId, vehicle.getLocation(), vbd.getData(), vehicle);
             } else if (virtualEntity instanceof VirtualItemDisplay vid) {
                 NMSUtil.spawnEntityItemDisplay(player, entityId, vehicle.getLocation(), vid.getData(), vehicle);
-            } else if (virtualEntity instanceof VirtualTextDisplay vbd) {
-                NMSUtil.spawnEntityTextDisplay(player, entityId, vehicle.getLocation(), vbd.getData(), vehicle);
-            } else if (virtualEntity instanceof VirtualInteraction vbd) {
-                NMSUtil.spawnEntityInteraction(player, entityId, vehicle.getLocation(), vbd.getData(), vehicle);
+            } else if (virtualEntity instanceof VirtualTextDisplay vtd) {
+                NMSUtil.spawnEntityTextDisplay(player, entityId, vehicle.getLocation(), vtd.getData(), vehicle);
+            } else if (virtualEntity instanceof VirtualInteraction vi) {
+                NMSUtil.spawnEntityInteraction(player, entityId, vehicle.getLocation(), vi.getData(), vehicle);
             } else {
                 throw new IllegalStateException("Unknown entity type: " + virtualEntity.getClass().getSimpleName());
             }
