@@ -43,7 +43,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
-import ru.violence.coreapi.common.api.reflection.ReflectMethod;
 import ru.violence.coreapi.common.api.reflection.ReflectionUtil;
 import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ArmorStandData;
@@ -55,6 +54,9 @@ import ru.violence.xholo.api.TextDisplayData;
 import ru.violence.xholo.util.updateflags.UpdateFlag;
 import ru.violence.xholo.util.updateflags.UpdateFlags;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -109,7 +111,15 @@ public class NMSUtil {
     private final EntityDataAccessor<Float> DP_INTERACTION_HEIGHT = ReflectionUtil.getFieldValue(Interaction.class, null, "d");
     private final EntityDataAccessor<Boolean> DP_INTERACTION_RESPONSE = ReflectionUtil.getFieldValue(Interaction.class, null, "e");
 
-    private final ReflectMethod<Integer> METHOD_TRACKEDENTITY_GETEFFECTIVERANGE = new ReflectMethod<>(ChunkMap.TrackedEntity.class, "b");
+    private final MethodHandle METHOD_TRACKEDENTITY_GETEFFECTIVERANGE;
+
+    static {
+        try {
+            METHOD_TRACKEDENTITY_GETEFFECTIVERANGE = MethodHandles.privateLookupIn(ChunkMap.TrackedEntity.class, MethodHandles.lookup()).findVirtual(ChunkMap.TrackedEntity.class, "b", MethodType.methodType(int.class));
+        } catch (NoSuchMethodException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public boolean isRealPlayer(@NotNull Player player) {
         if (player instanceof CraftPlayer) {
@@ -851,7 +861,11 @@ public class NMSUtil {
     public int getFurthestViewableBlock(@NotNull Player player) {
         ChunkMap.TrackedEntity tracker = ((CraftPlayer) player).getHandle().tracker;
         if (tracker == null) return 0;
-        return METHOD_TRACKEDENTITY_GETEFFECTIVERANGE.invoke(tracker);
+        try {
+            return (int) METHOD_TRACKEDENTITY_GETEFFECTIVERANGE.invoke(tracker);
+        } catch (Throwable throwable) {
+            throw new RuntimeException(throwable);
+        }
     }
 
     private void setDWEntityFlags(@NotNull SynchedEntityData watcher, boolean invisible, boolean glowing) {
