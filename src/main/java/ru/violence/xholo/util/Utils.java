@@ -11,9 +11,11 @@ import ru.violence.xholo.util.nms.NMSUtil;
 public class Utils {
     @Contract(pure = true)
     public static boolean isInDisplayRange(@NotNull Player player, @NotNull Location loc, double range) {
-        double xDif = player.getLocation().getX() - loc.getX();
-        double yDif = player.getLocation().getY() - loc.getY();
-        double zDif = player.getLocation().getZ() - loc.getZ();
+        Location playerLocation = player.getLocation();
+
+        double xDif = playerLocation.getX() - loc.getX();
+        double yDif = playerLocation.getY() - loc.getY();
+        double zDif = playerLocation.getZ() - loc.getZ();
 
         double max = max(xDif, yDif, zDif);
         double min = min(xDif, yDif, zDif);
