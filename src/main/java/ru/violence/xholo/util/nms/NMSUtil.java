@@ -119,6 +119,14 @@ public class NMSUtil {
         return false;
     }
 
+    public boolean isRemoved(@NotNull org.bukkit.entity.Entity entity) {
+        if (entity instanceof CraftPlayer) {
+            ServerPlayer handle = ((CraftPlayer) entity).getHandle();
+            return handle == null || handle.isRemoved();
+        }
+        return false;
+    }
+
     public void spawnEntityArmorStand(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ArmorStandData data,
                                       @Nullable ItemStack mainHandItem,
                                       @Nullable ItemStack offHandItem,

@@ -303,8 +303,8 @@ public final class ManagerImpl implements Manager {
             World world = veLoc.getWorld();
 
             for (Player player : world.getPlayers()) {
-                if (player.isDead()) continue;
                 if (!NMSUtil.isRealPlayer(player)) continue;
+                if (NMSUtil.isRemoved(player)) continue;
 
                 boolean isInRange = Utils.isInDisplayRange(player, veLoc, getDisplayRange());
 
