@@ -2,15 +2,15 @@ plugins {
     `java-library`
     id("java")
     id("maven-publish")
-    id("io.freefair.lombok") version "8.0.1"
-    id("io.papermc.paperweight.userdev") version "1.5.11"
+    id("io.freefair.lombok") version "8.10"
+    id("io.papermc.paperweight.userdev") version "1.7.2"
 }
 
 group = "ru.violence.xholo"
 version = "2.0.0-SNAPSHOT"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 repositories {
@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle("1.20.4-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.21-R0.1-SNAPSHOT")
     compileOnly("ru.violence.coreapi:common:0.1.14") {
         isTransitive = false
     }
@@ -58,13 +58,9 @@ publishing {
 }
 
 tasks {
-    assemble {
-        dependsOn(reobfJar)
-    }
-
     compileJava {
         options.encoding = Charsets.UTF_8.name()
-        options.release.set(17)
+        options.release.set(21)
     }
 
     javadoc {
@@ -74,8 +70,8 @@ tasks {
     processResources {
         filteringCharset = Charsets.UTF_8.name()
         val props = mapOf(
-                "version" to project.version,
-                "apiVersion" to "1.20"
+            "version" to project.version,
+            "apiVersion" to "1.21"
         )
         inputs.properties(props)
         filesMatching("plugin.yml") {
@@ -83,7 +79,7 @@ tasks {
         }
     }
 
-    reobfJar {
-        outputJar.set(layout.buildDirectory.file("libs/xHolo.jar"))
+    jar {
+        archiveFileName.set("xHolo.jar")
     }
 }
