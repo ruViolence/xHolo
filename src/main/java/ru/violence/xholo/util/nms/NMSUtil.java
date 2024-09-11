@@ -30,9 +30,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_20_R3.block.data.CraftBlockData;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -67,11 +67,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @UtilityClass
 public class NMSUtil {
-    private final AtomicInteger ENTITY_COUNTER = ReflectionUtil.getFieldValue(Entity.class, null, "d");
+    private final AtomicInteger ENTITY_COUNTER = ReflectionUtil.getFieldValue(Entity.class, null, "ENTITY_COUNTER");
 
-    private final EntityDataAccessor<Byte> DP_ENTITY_SHARED_FLAGS = ReflectionUtil.getFieldValue(Entity.class, null, "ao");
-    private final EntityDataAccessor<Optional<Component>> DP_ENTITY_CUSTOM_NAME = ReflectionUtil.getFieldValue(Entity.class, null, "aU");
-    private final EntityDataAccessor<Boolean> DP_ENTITY_CUSTOM_NAME_VISIBLE = ReflectionUtil.getFieldValue(Entity.class, null, "aV");
+    private final EntityDataAccessor<Byte> DP_ENTITY_SHARED_FLAGS = ReflectionUtil.getFieldValue(Entity.class, null, "DATA_SHARED_FLAGS_ID");
+    private final EntityDataAccessor<Optional<Component>> DP_ENTITY_CUSTOM_NAME = ReflectionUtil.getFieldValue(Entity.class, null, "DATA_CUSTOM_NAME");
+    private final EntityDataAccessor<Boolean> DP_ENTITY_CUSTOM_NAME_VISIBLE = ReflectionUtil.getFieldValue(Entity.class, null, "DATA_CUSTOM_NAME_VISIBLE");
 
     private final EntityDataAccessor<Byte> DP_ARMOR_STAND_CLIENT_FLAGS = ArmorStand.DATA_CLIENT_FLAGS;
     private final EntityDataAccessor<Rotations> DP_ARMOR_STAND_HEAD_POSE = ArmorStand.DATA_HEAD_POSE;
@@ -81,41 +81,41 @@ public class NMSUtil {
     private final EntityDataAccessor<Rotations> DP_ARMOR_STAND_LEFT_LEG_POSE = ArmorStand.DATA_LEFT_LEG_POSE;
     private final EntityDataAccessor<Rotations> DP_ARMOR_STAND_RIGHT_LEG_POSE = ArmorStand.DATA_RIGHT_LEG_POSE;
 
-    private final EntityDataAccessor<Integer> DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS = ReflectionUtil.getFieldValue(Display.class, null, "q");
-    private final EntityDataAccessor<Integer> DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION = ReflectionUtil.getFieldValue(Display.class, null, "r");
+    private final EntityDataAccessor<Integer> DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS = ReflectionUtil.getFieldValue(Display.class, null, "DATA_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS_ID");
+    private final EntityDataAccessor<Integer> DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION = ReflectionUtil.getFieldValue(Display.class, null, "DATA_TRANSFORMATION_INTERPOLATION_DURATION_ID");
     private final EntityDataAccessor<Integer> DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION = Display.DATA_POS_ROT_INTERPOLATION_DURATION_ID;
-    private final EntityDataAccessor<Vector3f> DP_DISPLAY_TRANSLATION = ReflectionUtil.getFieldValue(Display.class, null, "t");
-    private final EntityDataAccessor<Quaternionf> DP_DISPLAY_LEFT_ROTATION = ReflectionUtil.getFieldValue(Display.class, null, "v");
-    private final EntityDataAccessor<Vector3f> DP_DISPLAY_SCALE = ReflectionUtil.getFieldValue(Display.class, null, "u");
-    private final EntityDataAccessor<Quaternionf> DP_DISPLAY_RIGHT_ROTATION = ReflectionUtil.getFieldValue(Display.class, null, "aE");
-    private final EntityDataAccessor<Byte> DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS = ReflectionUtil.getFieldValue(Display.class, null, "aF");
-    private final EntityDataAccessor<Integer> DP_DISPLAY_BRIGHTNESS_OVERRIDE = ReflectionUtil.getFieldValue(Display.class, null, "aG");
-    private final EntityDataAccessor<Float> DP_DISPLAY_SHADOW_RADIUS = ReflectionUtil.getFieldValue(Display.class, null, "aI");
-    private final EntityDataAccessor<Float> DP_DISPLAY_SHADOW_STRENGTH = ReflectionUtil.getFieldValue(Display.class, null, "aJ");
-    private final EntityDataAccessor<Float> DP_DISPLAY_WIDTH = ReflectionUtil.getFieldValue(Display.class, null, "aK");
-    private final EntityDataAccessor<Float> DP_DISPLAY_HEIGHT = ReflectionUtil.getFieldValue(Display.class, null, "aL");
-    private final EntityDataAccessor<Integer> DP_DISPLAY_GLOW_COLOR_OVERRIDE = ReflectionUtil.getFieldValue(Display.class, null, "aM");
+    private final EntityDataAccessor<Vector3f> DP_DISPLAY_TRANSLATION = ReflectionUtil.getFieldValue(Display.class, null, "DATA_TRANSLATION_ID");
+    private final EntityDataAccessor<Quaternionf> DP_DISPLAY_LEFT_ROTATION = ReflectionUtil.getFieldValue(Display.class, null, "DATA_LEFT_ROTATION_ID");
+    private final EntityDataAccessor<Vector3f> DP_DISPLAY_SCALE = ReflectionUtil.getFieldValue(Display.class, null, "DATA_SCALE_ID");
+    private final EntityDataAccessor<Quaternionf> DP_DISPLAY_RIGHT_ROTATION = ReflectionUtil.getFieldValue(Display.class, null, "DATA_RIGHT_ROTATION_ID");
+    private final EntityDataAccessor<Byte> DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS = ReflectionUtil.getFieldValue(Display.class, null, "DATA_BILLBOARD_RENDER_CONSTRAINTS_ID");
+    private final EntityDataAccessor<Integer> DP_DISPLAY_BRIGHTNESS_OVERRIDE = ReflectionUtil.getFieldValue(Display.class, null, "DATA_BRIGHTNESS_OVERRIDE_ID");
+    private final EntityDataAccessor<Float> DP_DISPLAY_SHADOW_RADIUS = ReflectionUtil.getFieldValue(Display.class, null, "DATA_SHADOW_RADIUS_ID");
+    private final EntityDataAccessor<Float> DP_DISPLAY_SHADOW_STRENGTH = ReflectionUtil.getFieldValue(Display.class, null, "DATA_SHADOW_STRENGTH_ID");
+    private final EntityDataAccessor<Float> DP_DISPLAY_WIDTH = ReflectionUtil.getFieldValue(Display.class, null, "DATA_WIDTH_ID");
+    private final EntityDataAccessor<Float> DP_DISPLAY_HEIGHT = ReflectionUtil.getFieldValue(Display.class, null, "DATA_HEIGHT_ID");
+    private final EntityDataAccessor<Integer> DP_DISPLAY_GLOW_COLOR_OVERRIDE = ReflectionUtil.getFieldValue(Display.class, null, "DATA_GLOW_COLOR_OVERRIDE_ID");
 
-    private final EntityDataAccessor<BlockState> DP_BLOCK_DISPLAY_BLOCK = ReflectionUtil.getFieldValue(Display.BlockDisplay.class, null, "q");
+    private final EntityDataAccessor<BlockState> DP_BLOCK_DISPLAY_BLOCK = ReflectionUtil.getFieldValue(Display.BlockDisplay.class, null, "DATA_BLOCK_STATE_ID");
 
-    private final EntityDataAccessor<net.minecraft.world.item.ItemStack> DP_ITEM_DISPLAY_ITEM = ReflectionUtil.getFieldValue(Display.ItemDisplay.class, null, "r");
-    private final EntityDataAccessor<Byte> DP_ITEM_DISPLAY_TRANSFORM = ReflectionUtil.getFieldValue(Display.ItemDisplay.class, null, "s");
+    private final EntityDataAccessor<net.minecraft.world.item.ItemStack> DP_ITEM_DISPLAY_ITEM = ReflectionUtil.getFieldValue(Display.ItemDisplay.class, null, "DATA_ITEM_STACK_ID");
+    private final EntityDataAccessor<Byte> DP_ITEM_DISPLAY_TRANSFORM = ReflectionUtil.getFieldValue(Display.ItemDisplay.class, null, "DATA_ITEM_DISPLAY_ID");
 
-    private final EntityDataAccessor<Component> DP_TEXT_DISPLAY_TEXT = ReflectionUtil.getFieldValue(Display.TextDisplay.class, null, "aM");
+    private final EntityDataAccessor<Component> DP_TEXT_DISPLAY_TEXT = ReflectionUtil.getFieldValue(Display.TextDisplay.class, null, "DATA_TEXT_ID");
     private final EntityDataAccessor<Integer> DP_TEXT_DISPLAY_LINE_WIDTH = Display.TextDisplay.DATA_LINE_WIDTH_ID;
     private final EntityDataAccessor<Integer> DP_TEXT_DISPLAY_BACKGROUND_COLOR = Display.TextDisplay.DATA_BACKGROUND_COLOR_ID;
-    private final EntityDataAccessor<Byte> DP_TEXT_DISPLAY_OPACITY = ReflectionUtil.getFieldValue(Display.TextDisplay.class, null, "aP");
-    private final EntityDataAccessor<Byte> DP_TEXT_DISPLAY_STYLE_FLAGS = ReflectionUtil.getFieldValue(Display.TextDisplay.class, null, "aQ");
+    private final EntityDataAccessor<Byte> DP_TEXT_DISPLAY_OPACITY = ReflectionUtil.getFieldValue(Display.TextDisplay.class, null, "DATA_TEXT_OPACITY_ID");
+    private final EntityDataAccessor<Byte> DP_TEXT_DISPLAY_STYLE_FLAGS = ReflectionUtil.getFieldValue(Display.TextDisplay.class, null, "DATA_STYLE_FLAGS_ID");
 
-    private final EntityDataAccessor<Float> DP_INTERACTION_WIDTH = ReflectionUtil.getFieldValue(Interaction.class, null, "c");
-    private final EntityDataAccessor<Float> DP_INTERACTION_HEIGHT = ReflectionUtil.getFieldValue(Interaction.class, null, "d");
-    private final EntityDataAccessor<Boolean> DP_INTERACTION_RESPONSE = ReflectionUtil.getFieldValue(Interaction.class, null, "e");
+    private final EntityDataAccessor<Float> DP_INTERACTION_WIDTH = ReflectionUtil.getFieldValue(Interaction.class, null, "DATA_WIDTH_ID");
+    private final EntityDataAccessor<Float> DP_INTERACTION_HEIGHT = ReflectionUtil.getFieldValue(Interaction.class, null, "DATA_HEIGHT_ID");
+    private final EntityDataAccessor<Boolean> DP_INTERACTION_RESPONSE = ReflectionUtil.getFieldValue(Interaction.class, null, "DATA_RESPONSE_ID");
 
     private final MethodHandle METHOD_TRACKEDENTITY_GETEFFECTIVERANGE;
 
     static {
         try {
-            METHOD_TRACKEDENTITY_GETEFFECTIVERANGE = MethodHandles.privateLookupIn(ChunkMap.TrackedEntity.class, MethodHandles.lookup()).findVirtual(ChunkMap.TrackedEntity.class, "b", MethodType.methodType(int.class));
+            METHOD_TRACKEDENTITY_GETEFFECTIVERANGE = MethodHandles.privateLookupIn(ChunkMap.TrackedEntity.class, MethodHandles.lookup()).findVirtual(ChunkMap.TrackedEntity.class, "getEffectiveRange", MethodType.methodType(int.class));
         } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -144,7 +144,7 @@ public class NMSUtil {
                                       @Nullable ItemStack chestItem,
                                       @Nullable ItemStack legsItem,
                                       @Nullable ItemStack feetItem) {
-        List<Packet<ClientGamePacketListener>> packets = new ArrayList<>(3);
+        List<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>(3);
 
         packets.add(createSpawnEntityPacket(location, entityId, EntityType.ARMOR_STAND));
         packets.add(createSetArmorStandMetadataPacket(player, entityId, data, null));
@@ -169,7 +169,7 @@ public class NMSUtil {
                                       @Nullable ItemStack chestItem,
                                       @Nullable ItemStack legsItem,
                                       @Nullable ItemStack feetItem) {
-        List<Packet<ClientGamePacketListener>> packets = new ArrayList<>(3);
+        List<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>(3);
 
         packets.add(createSpawnEntityPacket(location, entityId, EntityType.ARMOR_STAND));
         packets.add(createSetArmorStandMetadataPacket(player, entityId, data, null));
@@ -313,51 +313,46 @@ public class NMSUtil {
 
     @Contract(pure = true)
     public @NotNull ClientboundSetEntityDataPacket createSetArmorStandMetadataPacket(@NotNull Player player, int entityId, @NotNull ArmorStandData data, @Nullable List<UpdateFlag<?>> flags) {
-        SynchedEntityData watcher = flags == null || flags.isEmpty()
+        List<SynchedEntityData.DataValue<?>> dataValues = flags == null || flags.isEmpty()
                 ? createArmorStandDataWatcher(player, data)
                 : createArmorStandDataWatcher(player, data, flags);
 
-        List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
         return new ClientboundSetEntityDataPacket(entityId, dataValues);
     }
 
     @Contract(pure = true)
     public @NotNull ClientboundSetEntityDataPacket createSetBlockDisplayMetadataPacket(int entityId, @NotNull BlockDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
-        SynchedEntityData watcher = flags == null || flags.isEmpty()
+        List<SynchedEntityData.DataValue<?>> dataValues = flags == null || flags.isEmpty()
                 ? createBlockDisplayDataWatcher(data)
                 : createBlockDisplayDataWatcher(data, flags);
 
-        List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
         return new ClientboundSetEntityDataPacket(entityId, dataValues);
     }
 
     @Contract(pure = true)
     public @NotNull ClientboundSetEntityDataPacket createSetItemDisplayMetadataPacket(@NotNull Player player, int entityId, @NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
-        SynchedEntityData watcher = flags == null || flags.isEmpty()
+        List<SynchedEntityData.DataValue<?>> dataValues = flags == null || flags.isEmpty()
                 ? createItemDisplayDataWatcher(player, data)
                 : createItemDisplayDataWatcher(player, data, flags);
 
-        List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
         return new ClientboundSetEntityDataPacket(entityId, dataValues);
     }
 
     @Contract(pure = true)
     public @NotNull ClientboundSetEntityDataPacket createSetTextDisplayMetadataPacket(@NotNull Player player, int entityId, @NotNull TextDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
-        SynchedEntityData watcher = flags == null || flags.isEmpty()
+        List<SynchedEntityData.DataValue<?>> dataValues = flags == null || flags.isEmpty()
                 ? createTextDisplayDataWatcher(player, data)
                 : createTextDisplayDataWatcher(player, data, flags);
 
-        List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
         return new ClientboundSetEntityDataPacket(entityId, dataValues);
     }
 
     @Contract(pure = true)
     public @NotNull ClientboundSetEntityDataPacket createSetInteractionMetadataPacket(@NotNull Player player, int entityId, @NotNull InteractionData data, @Nullable List<UpdateFlag<?>> flags) {
-        SynchedEntityData watcher = flags == null || flags.isEmpty()
+        List<SynchedEntityData.DataValue<?>> dataValues = flags == null || flags.isEmpty()
                 ? createInteractionDataWatcher(player, data)
                 : createInteractionDataWatcher(player, data, flags);
 
-        List<SynchedEntityData.DataValue<?>> dataValues = watcher.packDirty();
         return new ClientboundSetEntityDataPacket(entityId, dataValues);
     }
 
@@ -372,7 +367,7 @@ public class NMSUtil {
         fbb.writeByte((byte) ((int) (location.getPitch() * 256.0F / 360.0F)));
         fbb.writeBoolean(true); // onGround
 
-        sendPacket(player, new ClientboundTeleportEntityPacket(fbb));
+        sendPacket(player, ClientboundTeleportEntityPacket.STREAM_CODEC.decode(fbb));
     }
 
     public void destroyEntities(@NotNull Player player, int @NotNull ... entityIds) {
@@ -385,7 +380,7 @@ public class NMSUtil {
         fbb.writeVarInt(vehicleId);
         fbb.writeVarIntArray(passengerIds);
 
-        return new ClientboundSetPassengersPacket(fbb);
+        return ClientboundSetPassengersPacket.STREAM_CODEC.decode(fbb);
     }
 
     public void sendPacket(@NotNull Player player, @NotNull Object packet) {
@@ -399,268 +394,268 @@ public class NMSUtil {
     }
 
     @Contract(pure = true)
-    private @NotNull SynchedEntityData createArmorStandDataWatcher(@NotNull Player player, @NotNull ArmorStandData data) {
-        SynchedEntityData watcher = new SynchedEntityData(null);
+    private @NotNull List<SynchedEntityData.DataValue<?>> createArmorStandDataWatcher(@NotNull Player player, @NotNull ArmorStandData data) {
+        List<SynchedEntityData.DataValue<?>> dataValues = new ArrayList<>();
 
         // Set entity flags
-        setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
+        setDWEntityFlags(dataValues, !data.isVisible(), data.isGlowing());
 
         // Set custom name
-        setDWCustomName(watcher, data.getCustomName() != null ? data.getCustomName().apply(player) : null);
+        setDWCustomName(dataValues, data.getCustomName() != null ? data.getCustomName().apply(player) : null);
 
         // Set ArmorStand status
-        setDWArmorStandClientFlags(watcher, data.isSmall(), data.isHasArms(), !data.isHasBasePlate(), data.isMarker());
+        setDWArmorStandClientFlags(dataValues, data.isSmall(), data.isHasArms(), !data.isHasBasePlate(), data.isMarker());
 
         // Set rotations
-        if (data.getHeadPose() != null) setDWArmorStandHeadPose(watcher, data.getHeadPose());
-        if (data.getBodyPose() != null) setDWArmorStandBodyPose(watcher, data.getBodyPose());
-        if (data.getLeftArmPose() != null) setDWArmorStandLeftArmPose(watcher, data.getLeftArmPose());
-        if (data.getRightArmPose() != null) setDWArmorStandRightArmPose(watcher, data.getRightArmPose());
-        if (data.getLeftLegPose() != null) setDWArmorStandLeftLegPose(watcher, data.getLeftLegPose());
-        if (data.getRightLegPose() != null) setDWArmorStandRightLegPose(watcher, data.getRightLegPose());
+        if (data.getHeadPose() != null) setDWArmorStandHeadPose(dataValues, data.getHeadPose());
+        if (data.getBodyPose() != null) setDWArmorStandBodyPose(dataValues, data.getBodyPose());
+        if (data.getLeftArmPose() != null) setDWArmorStandLeftArmPose(dataValues, data.getLeftArmPose());
+        if (data.getRightArmPose() != null) setDWArmorStandRightArmPose(dataValues, data.getRightArmPose());
+        if (data.getLeftLegPose() != null) setDWArmorStandLeftLegPose(dataValues, data.getLeftLegPose());
+        if (data.getRightLegPose() != null) setDWArmorStandRightLegPose(dataValues, data.getRightLegPose());
 
-        return watcher;
+        return dataValues;
     }
 
     @Contract(pure = true)
-    public @NotNull SynchedEntityData createArmorStandDataWatcher(@NotNull Player player, @NotNull ArmorStandData data, @Nullable List<UpdateFlag<?>> flags) {
+    public @NotNull List<SynchedEntityData.DataValue<?>> createArmorStandDataWatcher(@NotNull Player player, @NotNull ArmorStandData data, @Nullable List<UpdateFlag<?>> flags) {
         if (flags == null || flags.isEmpty()) return createArmorStandDataWatcher(player, data);
 
-        SynchedEntityData watcher = new SynchedEntityData(null);
+        List<SynchedEntityData.DataValue<?>> dataValues = new ArrayList<>();
 
         for (UpdateFlag<?> flag : flags) {
             if (flag.equals(UpdateFlags.ARMOR_STAND_STATUS)) {
-                setDWArmorStandClientFlags(watcher, data.isSmall(), data.isHasArms(), !data.isHasBasePlate(), data.isMarker());
+                setDWArmorStandClientFlags(dataValues, data.isSmall(), data.isHasArms(), !data.isHasBasePlate(), data.isMarker());
             } else if (flag.equals(UpdateFlags.ARMOR_STAND_FLAGS)) {
-                setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
+                setDWEntityFlags(dataValues, !data.isVisible(), data.isGlowing());
             } else if (flag.equals(UpdateFlags.ARMOR_STAND_CUSTOM_NAME)) {
-                setDWCustomName(watcher, data.getCustomName() != null ? data.getCustomName().apply(player) : null);
+                setDWCustomName(dataValues, data.getCustomName() != null ? data.getCustomName().apply(player) : null);
             } else if (flag.equals(UpdateFlags.ARMOR_STAND_BODY_POSE)) {
-                if (data.getBodyPose() != null) setDWArmorStandBodyPose(watcher, data.getBodyPose());
+                if (data.getBodyPose() != null) setDWArmorStandBodyPose(dataValues, data.getBodyPose());
             } else if (flag.equals(UpdateFlags.ARMOR_STAND_LEFT_ARM_POSE)) {
-                if (data.getLeftArmPose() != null) setDWArmorStandLeftArmPose(watcher, data.getLeftArmPose());
+                if (data.getLeftArmPose() != null) setDWArmorStandLeftArmPose(dataValues, data.getLeftArmPose());
             } else if (flag.equals(UpdateFlags.ARMOR_STAND_RIGHT_ARM_POSE)) {
-                if (data.getRightArmPose() != null) setDWArmorStandRightArmPose(watcher, data.getRightArmPose());
+                if (data.getRightArmPose() != null) setDWArmorStandRightArmPose(dataValues, data.getRightArmPose());
             } else if (flag.equals(UpdateFlags.ARMOR_STAND_LEFT_LEG_POSE)) {
-                if (data.getLeftLegPose() != null) setDWArmorStandLeftLegPose(watcher, data.getLeftLegPose());
+                if (data.getLeftLegPose() != null) setDWArmorStandLeftLegPose(dataValues, data.getLeftLegPose());
             } else if (flag.equals(UpdateFlags.ARMOR_STAND_RIGHT_LEG_POSE)) {
-                if (data.getRightLegPose() != null) setDWArmorStandRightLegPose(watcher, data.getRightLegPose());
+                if (data.getRightLegPose() != null) setDWArmorStandRightLegPose(dataValues, data.getRightLegPose());
             } else if (flag.equals(UpdateFlags.ARMOR_STAND_HEAD_POSE)) {
-                if (data.getHeadPose() != null) setDWArmorStandHeadPose(watcher, data.getHeadPose());
+                if (data.getHeadPose() != null) setDWArmorStandHeadPose(dataValues, data.getHeadPose());
             } else {
                 throw new IllegalStateException("Unexpected flag: " + flag);
             }
         }
 
-        return watcher;
+        return dataValues;
     }
 
     @Contract(pure = true)
-    private @NotNull SynchedEntityData createBlockDisplayDataWatcher(@NotNull BlockDisplayData data) {
-        SynchedEntityData watcher = new SynchedEntityData(null);
+    private @NotNull List<SynchedEntityData.DataValue<?>> createBlockDisplayDataWatcher(@NotNull BlockDisplayData data) {
+        List<SynchedEntityData.DataValue<?>> dataValues = new ArrayList<>();
 
         // Set entity flags
-        setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
+        setDWEntityFlags(dataValues, !data.isVisible(), data.isGlowing());
 
         { // Set display data
-            setDWDisplayTransformation(watcher, data.getTransformation());
-            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
-            defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
-            defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
-            defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
-            defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
-            defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
-            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
-            defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+            setDWDisplayTransformation(dataValues, data.getTransformation());
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_WIDTH, data.getDisplayWidth()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_HEIGHT, data.getDisplayHeight()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard())));
 
             {
                 int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
-                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_GLOW_COLOR_OVERRIDE, color));
             }
             {
                 org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
                 int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
-                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness));
             }
         } // Set display data
 
         { // Set block display data
             BlockState nmsBlock = ((CraftBlockData) data.getBlock()).getState();
-            defineDataValue(watcher, DP_BLOCK_DISPLAY_BLOCK, nmsBlock);
+            dataValues.add(SynchedEntityData.DataValue.create(DP_BLOCK_DISPLAY_BLOCK, nmsBlock));
         } // Set block display data
 
-        return watcher;
+        return dataValues;
     }
 
     @Contract(pure = true)
-    public @NotNull SynchedEntityData createBlockDisplayDataWatcher(@NotNull BlockDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+    public @NotNull List<SynchedEntityData.DataValue<?>> createBlockDisplayDataWatcher(@NotNull BlockDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
         if (flags == null || flags.isEmpty()) return createBlockDisplayDataWatcher(data);
 
-        SynchedEntityData watcher = new SynchedEntityData(null);
+        List<SynchedEntityData.DataValue<?>> dataValues = new ArrayList<>();
 
         for (UpdateFlag<?> flag : flags) {
             if (flag.equals(UpdateFlags.DISPLAY_TRANSFORMATION)) {
-                setDWDisplayTransformation(watcher, data.getTransformation());
+                setDWDisplayTransformation(dataValues, data.getTransformation());
             } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DURATION)) {
-                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration()));
             } else if (flag.equals(UpdateFlags.DISPLAY_TELEPORT_DURATION)) {
-                defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration()));
             } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_RADIUS)) {
-                defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius()));
             } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_STRENGTH)) {
-                defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength()));
             } else if (flag.equals(UpdateFlags.DISPLAY_WIDTH)) {
-                defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_WIDTH, data.getDisplayWidth()));
             } else if (flag.equals(UpdateFlags.DISPLAY_HEIGHT)) {
-                defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_HEIGHT, data.getDisplayHeight()));
             } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DELAY)) {
-                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay()));
             } else if (flag.equals(UpdateFlags.DISPLAY_BILLBOARD)) {
-                defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard())));
             } else if (flag.equals(UpdateFlags.DISPLAY_GLOW_COLOR_OVERRIDE)) {
                 int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
-                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_GLOW_COLOR_OVERRIDE, color));
             } else if (flag.equals(UpdateFlags.DISPLAY_BRIGHTNESS)) {
                 org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
                 int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
-                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness));
             } else if (flag.equals(UpdateFlags.BLOCK_DISPLAY_BLOCK)) {
                 BlockState nmsBlock = ((CraftBlockData) data.getBlock()).getState();
-                defineDataValue(watcher, DP_BLOCK_DISPLAY_BLOCK, nmsBlock);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_BLOCK_DISPLAY_BLOCK, nmsBlock));
             } else {
                 throw new IllegalStateException("Unexpected flag: " + flag);
             }
         }
 
-        return watcher;
+        return dataValues;
     }
 
     @Contract(pure = true)
-    private @NotNull SynchedEntityData createItemDisplayDataWatcher(@NotNull Player player, @NotNull ItemDisplayData data) {
-        SynchedEntityData watcher = new SynchedEntityData(null);
+    private @NotNull List<SynchedEntityData.DataValue<?>> createItemDisplayDataWatcher(@NotNull Player player, @NotNull ItemDisplayData data) {
+        List<SynchedEntityData.DataValue<?>> dataValues = new ArrayList<>();
 
         // Set entity flags
-        setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
+        setDWEntityFlags(dataValues, !data.isVisible(), data.isGlowing());
 
         { // Set display data
-            setDWDisplayTransformation(watcher, data.getTransformation());
-            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
-            defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
-            defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
-            defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
-            defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
-            defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
-            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
-            defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+            setDWDisplayTransformation(dataValues, data.getTransformation());
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_WIDTH, data.getDisplayWidth()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_HEIGHT, data.getDisplayHeight()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard())));
 
             {
                 int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
-                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_GLOW_COLOR_OVERRIDE, color));
             }
             {
                 org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
                 int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
-                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness));
             }
         } // Set display data
 
         { // Set item display data
             CustomItem customItem = data.getItem();
-            defineDataValue(watcher, DP_ITEM_DISPLAY_ITEM, CraftItemStack.asNMSCopy(customItem != null ? customItem.apply(player) : null));
-            defineDataValue(watcher, DP_ITEM_DISPLAY_TRANSFORM, ItemDisplayContext.BY_ID.apply(data.getDisplayTransform().ordinal()).getId());
+            dataValues.add(SynchedEntityData.DataValue.create(DP_ITEM_DISPLAY_ITEM, CraftItemStack.asNMSCopy(customItem != null ? customItem.apply(player) : null)));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_ITEM_DISPLAY_TRANSFORM, ItemDisplayContext.BY_ID.apply(data.getDisplayTransform().ordinal()).getId()));
         } // Set item display data
 
-        return watcher;
+        return dataValues;
     }
 
     @Contract(pure = true)
-    public @NotNull SynchedEntityData createItemDisplayDataWatcher(@NotNull Player player, @NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+    public @NotNull List<SynchedEntityData.DataValue<?>> createItemDisplayDataWatcher(@NotNull Player player, @NotNull ItemDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
         if (flags == null || flags.isEmpty()) return createItemDisplayDataWatcher(player, data);
 
-        SynchedEntityData watcher = new SynchedEntityData(null);
+        List<SynchedEntityData.DataValue<?>> dataValues = new ArrayList<>();
 
         for (UpdateFlag<?> flag : flags) {
             if (flag.equals(UpdateFlags.DISPLAY_TRANSFORMATION)) {
-                setDWDisplayTransformation(watcher, data.getTransformation());
+                setDWDisplayTransformation(dataValues, data.getTransformation());
             } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DURATION)) {
-                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration()));
             } else if (flag.equals(UpdateFlags.DISPLAY_TELEPORT_DURATION)) {
-                defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration()));
             } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_RADIUS)) {
-                defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius()));
             } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_STRENGTH)) {
-                defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength()));
             } else if (flag.equals(UpdateFlags.DISPLAY_WIDTH)) {
-                defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_WIDTH, data.getDisplayWidth()));
             } else if (flag.equals(UpdateFlags.DISPLAY_HEIGHT)) {
-                defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_HEIGHT, data.getDisplayHeight()));
             } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DELAY)) {
-                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay()));
             } else if (flag.equals(UpdateFlags.DISPLAY_BILLBOARD)) {
-                defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard())));
             } else if (flag.equals(UpdateFlags.DISPLAY_GLOW_COLOR_OVERRIDE)) {
                 int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
-                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_GLOW_COLOR_OVERRIDE, color));
             } else if (flag.equals(UpdateFlags.DISPLAY_BRIGHTNESS)) {
                 org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
                 int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
-                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness));
             } else if (flag.equals(UpdateFlags.ITEM_DISPLAY_ITEM)) {
                 CustomItem customItem = data.getItem();
-                defineDataValue(watcher, DP_ITEM_DISPLAY_ITEM, CraftItemStack.asNMSCopy(customItem != null ? customItem.apply(player) : null));
+                dataValues.add(SynchedEntityData.DataValue.create(DP_ITEM_DISPLAY_ITEM, CraftItemStack.asNMSCopy(customItem != null ? customItem.apply(player) : null)));
             } else if (flag.equals(UpdateFlags.ITEM_DISPLAY_TRANSFORM)) {
-                defineDataValue(watcher, DP_ITEM_DISPLAY_TRANSFORM, ItemDisplayContext.BY_ID.apply(data.getDisplayTransform().ordinal()).getId());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_ITEM_DISPLAY_TRANSFORM, ItemDisplayContext.BY_ID.apply(data.getDisplayTransform().ordinal()).getId()));
             } else {
                 throw new IllegalStateException("Unexpected flag: " + flag);
             }
         }
 
-        return watcher;
+        return dataValues;
     }
 
     @Contract(pure = true)
-    private @NotNull SynchedEntityData createTextDisplayDataWatcher(@NotNull Player player, @NotNull TextDisplayData data) {
-        SynchedEntityData watcher = new SynchedEntityData(null);
+    private @NotNull List<SynchedEntityData.DataValue<?>> createTextDisplayDataWatcher(@NotNull Player player, @NotNull TextDisplayData data) {
+        List<SynchedEntityData.DataValue<?>> dataValues = new ArrayList<>();
 
         // Set entity flags
-        setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
+        setDWEntityFlags(dataValues, !data.isVisible(), data.isGlowing());
 
         { // Set display data
-            setDWDisplayTransformation(watcher, data.getTransformation());
-            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
-            defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
-            defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
-            defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
-            defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
-            defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
-            defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
-            defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+            setDWDisplayTransformation(dataValues, data.getTransformation());
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_WIDTH, data.getDisplayWidth()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_HEIGHT, data.getDisplayHeight()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard())));
 
             {
                 int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
-                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_GLOW_COLOR_OVERRIDE, color));
             }
             {
                 org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
                 int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
-                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness));
             }
         } // Set display data
 
         { // Set text display data
             {
                 Component nmsComponent = PaperAdventure.asVanilla(data.getText().apply(player));
-                defineDataValue(watcher, DP_TEXT_DISPLAY_TEXT, nmsComponent);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_TEXT_DISPLAY_TEXT, nmsComponent));
             }
 
-            defineDataValue(watcher, DP_TEXT_DISPLAY_LINE_WIDTH, data.getLineWidth());
+            dataValues.add(SynchedEntityData.DataValue.create(DP_TEXT_DISPLAY_LINE_WIDTH, data.getLineWidth()));
 
             {
                 int color = data.getBackgroundColor() != null ? data.getBackgroundColor().asARGB() : -1;
-                defineDataValue(watcher, DP_TEXT_DISPLAY_BACKGROUND_COLOR, color);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_TEXT_DISPLAY_BACKGROUND_COLOR, color));
             }
 
-            defineDataValue(watcher, DP_TEXT_DISPLAY_OPACITY, data.getTextOpacity());
+            dataValues.add(SynchedEntityData.DataValue.create(DP_TEXT_DISPLAY_OPACITY, data.getTextOpacity()));
 
             {
                 boolean alignLeft;
@@ -679,55 +674,55 @@ public class NMSUtil {
                         alignRight = false;
                     }
                 }
-                setDWTextDisplayStyleFlags(watcher, data.isShadowed(), data.isSeeThrough(), data.isDefaultBackground(), alignLeft, alignRight);
+                setDWTextDisplayStyleFlags(dataValues, data.isShadowed(), data.isSeeThrough(), data.isDefaultBackground(), alignLeft, alignRight);
             }
         } // Set text display data
 
-        return watcher;
+        return dataValues;
     }
 
     @Contract(pure = true)
-    public @NotNull SynchedEntityData createTextDisplayDataWatcher(@NotNull Player player, @NotNull TextDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
+    public @NotNull List<SynchedEntityData.DataValue<?>> createTextDisplayDataWatcher(@NotNull Player player, @NotNull TextDisplayData data, @Nullable List<UpdateFlag<?>> flags) {
         if (flags == null || flags.isEmpty()) return createTextDisplayDataWatcher(player, data);
 
-        SynchedEntityData watcher = new SynchedEntityData(null);
+        List<SynchedEntityData.DataValue<?>> dataValues = new ArrayList<>();
 
         for (UpdateFlag<?> flag : flags) {
             if (flag.equals(UpdateFlags.DISPLAY_TRANSFORMATION)) {
-                setDWDisplayTransformation(watcher, data.getTransformation());
+                setDWDisplayTransformation(dataValues, data.getTransformation());
             } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DURATION)) {
-                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_DURATION, data.getInterpolationDuration()));
             } else if (flag.equals(UpdateFlags.DISPLAY_TELEPORT_DURATION)) {
-                defineDataValue(watcher, DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_POS_ROT_INTERPOLATION_DURATION, data.getTeleportDuration()));
             } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_RADIUS)) {
-                defineDataValue(watcher, DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_RADIUS, data.getShadowRadius()));
             } else if (flag.equals(UpdateFlags.DISPLAY_SHADOW_STRENGTH)) {
-                defineDataValue(watcher, DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SHADOW_STRENGTH, data.getShadowStrength()));
             } else if (flag.equals(UpdateFlags.DISPLAY_WIDTH)) {
-                defineDataValue(watcher, DP_DISPLAY_WIDTH, data.getDisplayWidth());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_WIDTH, data.getDisplayWidth()));
             } else if (flag.equals(UpdateFlags.DISPLAY_HEIGHT)) {
-                defineDataValue(watcher, DP_DISPLAY_HEIGHT, data.getDisplayHeight());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_HEIGHT, data.getDisplayHeight()));
             } else if (flag.equals(UpdateFlags.DISPLAY_INTERPOLATION_DELAY)) {
-                defineDataValue(watcher, DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSFORMATION_INTERPOLATION_START_DELTA_TICKS, data.getInterpolationDelay()));
             } else if (flag.equals(UpdateFlags.DISPLAY_BILLBOARD)) {
-                defineDataValue(watcher, DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard()));
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BILLBOARD_RENDER_CONSTRAINTS, toNMS(data.getBillboard())));
             } else if (flag.equals(UpdateFlags.DISPLAY_GLOW_COLOR_OVERRIDE)) {
                 int color = data.getGlowColorOverride() != null ? data.getGlowColorOverride().asARGB() : 0;
-                defineDataValue(watcher, DP_DISPLAY_GLOW_COLOR_OVERRIDE, color);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_GLOW_COLOR_OVERRIDE, color));
             } else if (flag.equals(UpdateFlags.DISPLAY_BRIGHTNESS)) {
                 org.bukkit.entity.Display.Brightness brightness = data.getBrightness();
                 int nmsBrightness = data.getBrightness() != null ? new net.minecraft.util.Brightness(brightness.getBlockLight(), brightness.getSkyLight()).pack() : -1;
-                defineDataValue(watcher, DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_BRIGHTNESS_OVERRIDE, nmsBrightness));
             } else if (flag.equals(UpdateFlags.TEXT_DISPLAY_TEXT)) {
                 Component nmsComponent = PaperAdventure.asVanilla(data.getText().apply(player));
-                defineDataValue(watcher, DP_TEXT_DISPLAY_TEXT, nmsComponent);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_TEXT_DISPLAY_TEXT, nmsComponent));
             } else if (flag.equals(UpdateFlags.TEXT_DISPLAY_LINE_WIDTH)) {
-                defineDataValue(watcher, DP_TEXT_DISPLAY_LINE_WIDTH, data.getLineWidth());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_TEXT_DISPLAY_LINE_WIDTH, data.getLineWidth()));
             } else if (flag.equals(UpdateFlags.TEXT_DISPLAY_BACKGROUND_COLOR)) {
                 int color = data.getBackgroundColor() != null ? data.getBackgroundColor().asARGB() : -1;
-                defineDataValue(watcher, DP_TEXT_DISPLAY_BACKGROUND_COLOR, color);
+                dataValues.add(SynchedEntityData.DataValue.create(DP_TEXT_DISPLAY_BACKGROUND_COLOR, color));
             } else if (flag.equals(UpdateFlags.TEXT_DISPLAY_OPACITY)) {
-                defineDataValue(watcher, DP_TEXT_DISPLAY_OPACITY, data.getTextOpacity());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_TEXT_DISPLAY_OPACITY, data.getTextOpacity()));
             } else if (flag.equals(UpdateFlags.TEXT_DISPLAY_STYLE)) {
                 boolean alignLeft;
                 boolean alignRight;
@@ -745,68 +740,68 @@ public class NMSUtil {
                         alignRight = false;
                     }
                 }
-                setDWTextDisplayStyleFlags(watcher, data.isShadowed(), data.isSeeThrough(), data.isDefaultBackground(), alignLeft, alignRight);
+                setDWTextDisplayStyleFlags(dataValues, data.isShadowed(), data.isSeeThrough(), data.isDefaultBackground(), alignLeft, alignRight);
             } else {
                 throw new IllegalStateException("Unexpected flag: " + flag);
             }
         }
 
-        return watcher;
+        return dataValues;
     }
 
     @Contract(pure = true)
-    private @NotNull SynchedEntityData createInteractionDataWatcher(@NotNull Player player, @NotNull InteractionData data) {
-        SynchedEntityData watcher = new SynchedEntityData(null);
+    private @NotNull List<SynchedEntityData.DataValue<?>> createInteractionDataWatcher(@NotNull Player player, @NotNull InteractionData data) {
+        List<SynchedEntityData.DataValue<?>> dataValues = new ArrayList<>();
 
         // Set entity flags
-        setDWEntityFlags(watcher, !data.isVisible(), data.isGlowing());
+        setDWEntityFlags(dataValues, !data.isVisible(), data.isGlowing());
 
         { // Set interaction data
-            defineDataValue(watcher, DP_INTERACTION_WIDTH, data.getWidth());
-            defineDataValue(watcher, DP_INTERACTION_HEIGHT, data.getHeight());
-            defineDataValue(watcher, DP_INTERACTION_RESPONSE, data.isResponsive());
+            dataValues.add(SynchedEntityData.DataValue.create(DP_INTERACTION_WIDTH, data.getWidth()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_INTERACTION_HEIGHT, data.getHeight()));
+            dataValues.add(SynchedEntityData.DataValue.create(DP_INTERACTION_RESPONSE, data.isResponsive()));
         } // Set interaction data
 
-        return watcher;
+        return dataValues;
     }
 
     @Contract(pure = true)
-    public @NotNull SynchedEntityData createInteractionDataWatcher(@NotNull Player player, @NotNull InteractionData data, @Nullable List<UpdateFlag<?>> flags) {
+    public @NotNull List<SynchedEntityData.DataValue<?>> createInteractionDataWatcher(@NotNull Player player, @NotNull InteractionData data, @Nullable List<UpdateFlag<?>> flags) {
         if (flags == null || flags.isEmpty()) return createInteractionDataWatcher(player, data);
 
-        SynchedEntityData watcher = new SynchedEntityData(null);
+        List<SynchedEntityData.DataValue<?>> dataValues = new ArrayList<>();
 
         for (UpdateFlag<?> flag : flags) {
             if (flag.equals(UpdateFlags.INTERACTION_WIDTH)) {
-                defineDataValue(watcher, DP_INTERACTION_WIDTH, data.getWidth());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_INTERACTION_WIDTH, data.getWidth()));
             } else if (flag.equals(UpdateFlags.INTERACTION_HEIGHT)) {
-                defineDataValue(watcher, DP_INTERACTION_HEIGHT, data.getHeight());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_INTERACTION_HEIGHT, data.getHeight()));
             } else if (flag.equals(UpdateFlags.INTERACTION_RESPONSE)) {
-                defineDataValue(watcher, DP_INTERACTION_RESPONSE, data.isResponsive());
+                dataValues.add(SynchedEntityData.DataValue.create(DP_INTERACTION_RESPONSE, data.isResponsive()));
             } else {
                 throw new IllegalStateException("Unexpected flag: " + flag);
             }
         }
 
-        return watcher;
+        return dataValues;
     }
 
-    private void setDWTextDisplayStyleFlags(@NotNull SynchedEntityData watcher, boolean shadowed, boolean seeThrough, boolean defaultBackground, boolean alignLeft, boolean alignRight) {
+    private void setDWTextDisplayStyleFlags(@NotNull List<SynchedEntityData.DataValue<?>> dataValues, boolean shadowed, boolean seeThrough, boolean defaultBackground, boolean alignLeft, boolean alignRight) {
         byte flags = 0;
         flags = setStatus(flags, 0x1, shadowed);
         flags = setStatus(flags, 0x2, seeThrough);
         flags = setStatus(flags, 0x4, defaultBackground);
         flags = setStatus(flags, 0x8, alignLeft);
         flags = setStatus(flags, 0x10, alignRight);
-        defineDataValue(watcher, DP_TEXT_DISPLAY_STYLE_FLAGS, flags);
+        dataValues.add(SynchedEntityData.DataValue.create(DP_TEXT_DISPLAY_STYLE_FLAGS, flags));
     }
 
-    private void setDWDisplayTransformation(SynchedEntityData watcher, Transformation transformation) {
+    private void setDWDisplayTransformation(List<SynchedEntityData.DataValue<?>> dataValues, Transformation transformation) {
         com.mojang.math.Transformation nmsTransformation = new com.mojang.math.Transformation(transformation.getTranslation(), transformation.getLeftRotation(), transformation.getScale(), transformation.getRightRotation());
-        defineDataValue(watcher, DP_DISPLAY_TRANSLATION, nmsTransformation.getTranslation());
-        defineDataValue(watcher, DP_DISPLAY_LEFT_ROTATION, nmsTransformation.getLeftRotation());
-        defineDataValue(watcher, DP_DISPLAY_SCALE, nmsTransformation.getScale());
-        defineDataValue(watcher, DP_DISPLAY_RIGHT_ROTATION, nmsTransformation.getRightRotation());
+        dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_TRANSLATION, nmsTransformation.getTranslation()));
+        dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_LEFT_ROTATION, nmsTransformation.getLeftRotation()));
+        dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_SCALE, nmsTransformation.getScale()));
+        dataValues.add(SynchedEntityData.DataValue.create(DP_DISPLAY_RIGHT_ROTATION, nmsTransformation.getRightRotation()));
     }
 
     @Contract(pure = true)
@@ -827,6 +822,7 @@ public class NMSUtil {
             case LEGS -> net.minecraft.world.entity.EquipmentSlot.LEGS;
             case CHEST -> net.minecraft.world.entity.EquipmentSlot.CHEST;
             case HEAD -> net.minecraft.world.entity.EquipmentSlot.HEAD;
+            case BODY -> net.minecraft.world.entity.EquipmentSlot.BODY;
         };
     }
 
@@ -859,7 +855,7 @@ public class NMSUtil {
     }
 
     public int getFurthestViewableBlock(@NotNull Player player) {
-        ChunkMap.TrackedEntity tracker = ((CraftPlayer) player).getHandle().tracker;
+        ChunkMap.TrackedEntity tracker = ((CraftPlayer) player).getHandle().moonrise$getTrackedEntity();
         if (tracker == null) return 0;
         try {
             return (int) METHOD_TRACKEDENTITY_GETEFFECTIVERANGE.invoke(tracker);
@@ -868,54 +864,49 @@ public class NMSUtil {
         }
     }
 
-    private void setDWEntityFlags(@NotNull SynchedEntityData watcher, boolean invisible, boolean glowing) {
+    private void setDWEntityFlags(@NotNull List<SynchedEntityData.DataValue<?>> dataValues, boolean invisible, boolean glowing) {
         byte flags = 0;
         flags = setFlag(flags, 0x5, invisible);
         flags = setFlag(flags, 0x6, glowing);
-        defineDataValue(watcher, DP_ENTITY_SHARED_FLAGS, flags);
+        dataValues.add(SynchedEntityData.DataValue.create(DP_ENTITY_SHARED_FLAGS, flags));
     }
 
-    private void setDWCustomName(@NotNull SynchedEntityData watcher, @Nullable net.kyori.adventure.text.Component customName) {
+    private void setDWCustomName(@NotNull List<SynchedEntityData.DataValue<?>> dataValues, @Nullable net.kyori.adventure.text.Component customName) {
         Component nmsName = customName != null ? io.papermc.paper.adventure.PaperAdventure.asVanilla(customName) : null;
-        defineDataValue(watcher, DP_ENTITY_CUSTOM_NAME, Optional.ofNullable(nmsName));
-        defineDataValue(watcher, DP_ENTITY_CUSTOM_NAME_VISIBLE, nmsName != null);
+        dataValues.add(SynchedEntityData.DataValue.create(DP_ENTITY_CUSTOM_NAME, Optional.ofNullable(nmsName)));
+        dataValues.add(SynchedEntityData.DataValue.create(DP_ENTITY_CUSTOM_NAME_VISIBLE, nmsName != null));
     }
 
-    private void setDWArmorStandClientFlags(@NotNull SynchedEntityData watcher, boolean small, boolean hasArms, boolean noBasePlate, boolean marker) {
+    private void setDWArmorStandClientFlags(@NotNull List<SynchedEntityData.DataValue<?>> dataValues, boolean small, boolean hasArms, boolean noBasePlate, boolean marker) {
         byte status = 0;
         status = setStatus(status, 0x1, small);
         status = setStatus(status, 0x4, hasArms);
         status = setStatus(status, 0x8, noBasePlate);
         status = setStatus(status, 0x10, marker);
-        defineDataValue(watcher, DP_ARMOR_STAND_CLIENT_FLAGS, status);
+        dataValues.add(SynchedEntityData.DataValue.create(DP_ARMOR_STAND_CLIENT_FLAGS, status));
     }
 
-    private void setDWArmorStandHeadPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
-        defineDataValue(watcher, DP_ARMOR_STAND_HEAD_POSE, toNMS(pose));
+    private void setDWArmorStandHeadPose(@NotNull List<SynchedEntityData.DataValue<?>> dataValues, @NotNull EulerAngle pose) {
+        dataValues.add(SynchedEntityData.DataValue.create(DP_ARMOR_STAND_HEAD_POSE, toNMS(pose)));
     }
 
-    private void setDWArmorStandBodyPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
-        defineDataValue(watcher, DP_ARMOR_STAND_BODY_POSE, toNMS(pose));
+    private void setDWArmorStandBodyPose(@NotNull List<SynchedEntityData.DataValue<?>> dataValues, @NotNull EulerAngle pose) {
+        dataValues.add(SynchedEntityData.DataValue.create(DP_ARMOR_STAND_BODY_POSE, toNMS(pose)));
     }
 
-    private void setDWArmorStandLeftArmPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
-        defineDataValue(watcher, DP_ARMOR_STAND_LEFT_ARM_POSE, toNMS(pose));
+    private void setDWArmorStandLeftArmPose(@NotNull List<SynchedEntityData.DataValue<?>> dataValues, @NotNull EulerAngle pose) {
+        dataValues.add(SynchedEntityData.DataValue.create(DP_ARMOR_STAND_LEFT_ARM_POSE, toNMS(pose)));
     }
 
-    private void setDWArmorStandRightArmPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
-        defineDataValue(watcher, DP_ARMOR_STAND_RIGHT_ARM_POSE, toNMS(pose));
+    private void setDWArmorStandRightArmPose(@NotNull List<SynchedEntityData.DataValue<?>> dataValues, @NotNull EulerAngle pose) {
+        dataValues.add(SynchedEntityData.DataValue.create(DP_ARMOR_STAND_RIGHT_ARM_POSE, toNMS(pose)));
     }
 
-    private void setDWArmorStandLeftLegPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
-        defineDataValue(watcher, DP_ARMOR_STAND_LEFT_LEG_POSE, toNMS(pose));
+    private void setDWArmorStandLeftLegPose(@NotNull List<SynchedEntityData.DataValue<?>> dataValues, @NotNull EulerAngle pose) {
+        dataValues.add(SynchedEntityData.DataValue.create(DP_ARMOR_STAND_LEFT_LEG_POSE, toNMS(pose)));
     }
 
-    private void setDWArmorStandRightLegPose(@NotNull SynchedEntityData watcher, @NotNull EulerAngle pose) {
-        defineDataValue(watcher, DP_ARMOR_STAND_RIGHT_LEG_POSE, toNMS(pose));
-    }
-
-    private <T> void defineDataValue(@NotNull SynchedEntityData watcher, @NotNull EntityDataAccessor<T> dataValue, T value) {
-        watcher.define(dataValue, value);
-        watcher.markDirty(dataValue);
+    private void setDWArmorStandRightLegPose(@NotNull List<SynchedEntityData.DataValue<?>> dataValues, @NotNull EulerAngle pose) {
+        dataValues.add(SynchedEntityData.DataValue.create(DP_ARMOR_STAND_RIGHT_LEG_POSE, toNMS(pose)));
     }
 }
