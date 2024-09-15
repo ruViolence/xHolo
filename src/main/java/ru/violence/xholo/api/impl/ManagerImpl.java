@@ -254,10 +254,10 @@ public final class ManagerImpl implements Manager {
     }
 
     public void updateVisibility() {
-        updateVisibility(null);
+        updateVisibility(null, null);
     }
 
-    public void updateVisibility(@Nullable Consumer<Player> onUpdate) {
+    public void updateVisibility(@Nullable Map<World, List<Player>> worldPlayersCache, @Nullable Consumer<Player> onUpdate) {
         if (!registered) return;
         if (!autoUpdate) return;
 
@@ -301,8 +301,9 @@ public final class ManagerImpl implements Manager {
 
             Location veLoc = virtualEntity.getLocation();
             World world = veLoc.getWorld();
+            List<Player> players = worldPlayersCache != null ? worldPlayersCache.computeIfAbsent(world, World::getPlayers) : world.getPlayers();
 
-            for (Player player : world.getPlayers()) {
+            for (Player player : players) {
                 if (!NMSUtil.isRealPlayer(player)) continue;
                 if (NMSUtil.isRemoved(player)) continue;
 
@@ -390,7 +391,7 @@ public final class ManagerImpl implements Manager {
                 hideAll();
             }
 
-            updateVisibility(player -> {
+            updateVisibility(null, player -> {
                 int entityId = virtualEntity.getEntityId();
                 Location location = virtualEntity.getLocation();
 
