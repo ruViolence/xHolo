@@ -24,10 +24,10 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle("1.20.4-R0.1-SNAPSHOT")
-    compileOnly("ru.violence.coreapi:common:0.1.14") {
+    compileOnly("ru.violence.coreapi:common:${project.property("coreApiVersion")}") {
         isTransitive = false
     }
-    compileOnly("ru.violence.coreapi:bukkit:0.1.14") {
+    compileOnly("ru.violence.coreapi:bukkit:${project.property("coreApiVersion")}") {
         isTransitive = false
     }
     compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0")
