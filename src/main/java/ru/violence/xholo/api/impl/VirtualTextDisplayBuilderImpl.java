@@ -46,7 +46,7 @@ public final class VirtualTextDisplayBuilderImpl implements VirtualTextDisplayBu
     public @NotNull VirtualTextDisplay build() {
         return new VirtualTextDisplayImpl(
                 plugin,
-                location,
+                location.clone(),
                 data
         );
     }

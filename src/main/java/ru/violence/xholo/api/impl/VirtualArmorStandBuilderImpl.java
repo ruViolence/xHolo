@@ -119,7 +119,7 @@ public final class VirtualArmorStandBuilderImpl implements VirtualArmorStandBuil
     public @NotNull VirtualArmorStand build() {
         return new VirtualArmorStandImpl(
                 plugin,
-                location,
+                location.clone(),
                 data,
                 itemInHand,
                 itemInOffHand,

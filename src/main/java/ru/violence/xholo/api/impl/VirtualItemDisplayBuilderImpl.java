@@ -46,7 +46,7 @@ public final class VirtualItemDisplayBuilderImpl implements VirtualItemDisplayBu
     public @NotNull VirtualItemDisplay build() {
         return new VirtualItemDisplayImpl(
                 plugin,
-                location,
+                location.clone(),
                 data
         );
     }

@@ -72,7 +72,7 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
         synchronized (this) {
             boolean isWorldChanged = !this.location.getWorld().equals(location.getWorld());
             boolean isLocationChanged = isWorldChanged || !this.location.equals(location);
-            this.location = location;
+            this.location = location.clone();
             if (isLocationChanged) {
                 manager.updateLocation(isWorldChanged);
             }

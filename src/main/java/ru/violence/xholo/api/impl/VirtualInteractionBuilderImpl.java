@@ -46,7 +46,7 @@ public final class VirtualInteractionBuilderImpl implements VirtualInteractionBu
     public @NotNull VirtualInteraction build() {
         return new VirtualInteractionImpl(
                 plugin,
-                location,
+                location.clone(),
                 data
         );
     }

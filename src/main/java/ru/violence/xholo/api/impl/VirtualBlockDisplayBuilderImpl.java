@@ -46,7 +46,7 @@ public final class VirtualBlockDisplayBuilderImpl implements VirtualBlockDisplay
     public @NotNull VirtualBlockDisplay build() {
         return new VirtualBlockDisplayImpl(
                 plugin,
-                location,
+                location.clone(),
                 data
         );
     }
