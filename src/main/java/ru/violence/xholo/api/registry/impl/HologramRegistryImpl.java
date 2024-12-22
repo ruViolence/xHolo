@@ -57,7 +57,7 @@ public final class HologramRegistryImpl implements HologramRegistry {
 
         lock.readLock().lock();
         for (VirtualEntity ve : virtualEntities.values()) {
-            if (ve.getLocation().getWorld().equals(world)) {
+            if (ve.getWorld().equals(world)) {
                 list.add(ve);
             }
         }

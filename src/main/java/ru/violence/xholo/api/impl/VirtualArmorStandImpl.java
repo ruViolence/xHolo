@@ -1,6 +1,7 @@
 package ru.violence.xholo.api.impl;
 
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -10,6 +11,7 @@ import ru.violence.coreapi.common.api.util.Check;
 import ru.violence.xholo.api.ArmorStandData;
 import ru.violence.xholo.api.Manager;
 import ru.violence.xholo.api.VirtualArmorStand;
+import ru.violence.xholo.util.Utils;
 import ru.violence.xholo.util.nms.NMSUtil;
 import ru.violence.xholo.util.updateflags.UpdateFlag;
 import ru.violence.xholo.util.updateflags.UpdateFlags;
@@ -21,7 +23,12 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
     private final ManagerImpl manager;
 
     private final @NotNull Plugin plugin;
-    private @NotNull Location location;
+    private @NotNull World world;
+    private double x;
+    private double y;
+    private double z;
+    private float yaw;
+    private float pitch;
     private @NotNull ArmorStandData data;
     private @Nullable ItemStack itemInHand;
     private @Nullable ItemStack itemInOffHand;
@@ -30,17 +37,34 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
     private @Nullable ItemStack chestplate;
     private @Nullable ItemStack helmet;
 
-    public VirtualArmorStandImpl(@NotNull Plugin plugin, @NotNull Location location, @NotNull ArmorStandData data,
+    public VirtualArmorStandImpl(@NotNull Plugin plugin,
+                                 @NotNull World world,
+                                 double x,
+                                 double y,
+                                 double z,
+                                 float yaw,
+                                 float pitch,
+                                 @NotNull ArmorStandData data,
                                  @Nullable ItemStack itemInHand,
                                  @Nullable ItemStack itemInOffHand,
                                  @Nullable ItemStack boots,
                                  @Nullable ItemStack leggings,
                                  @Nullable ItemStack chestplate,
                                  @Nullable ItemStack helmet) {
+        Check.isTrue(!Utils.isUnset(x), "X is unset");
+        Check.isTrue(!Utils.isUnset(y), "Y is unset");
+        Check.isTrue(!Utils.isUnset(z), "Z is unset");
+        Check.isTrue(!Utils.isUnset(yaw), "Yaw is unset");
+        Check.isTrue(!Utils.isUnset(pitch), "Pitch is unset");
+
         this.plugin = Check.notNull(plugin, "Plugin is null");
-        this.location = Check.notNull(location, "Location is null");
+        this.world = Check.notNull(world, "World is null");
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.yaw = yaw;
+        this.pitch = pitch;
         this.data = Check.notNull(data, "Data is null");
-        Check.notNull(location.getWorld(), "World is null");
         this.itemInHand = itemInHand;
         this.itemInOffHand = itemInOffHand;
         this.boots = boots;
@@ -62,7 +86,7 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
 
     @Override
     public @NotNull Location getLocation() {
-        return location.clone();
+        return new Location(world, x, y, z, yaw, pitch);
     }
 
     @Override
@@ -70,11 +94,121 @@ public final class VirtualArmorStandImpl implements VirtualArmorStand {
         Check.notNull(location, "Location is null");
         Check.notNull(location.getWorld(), "World is null");
         synchronized (this) {
-            boolean isWorldChanged = !this.location.getWorld().equals(location.getWorld());
-            boolean isLocationChanged = isWorldChanged || !this.location.equals(location);
-            this.location = location.clone();
-            if (isLocationChanged) {
-                manager.updateLocation(isWorldChanged);
+            setWorld(location.getWorld());
+            teleport(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+        }
+    }
+
+    @Override
+    public @NotNull World getWorld() {
+        return world;
+    }
+
+    @Override
+    public void setWorld(@NotNull World world) {
+        Check.notNull(world, "World is null");
+        synchronized (this) {
+            boolean isWorldChanged = !this.world.equals(world);
+
+            // TODO: Test this
+            if (isWorldChanged) {
+                manager.hideAll();
+            }
+        }
+    }
+
+    @Override
+    public double getX() {
+        return x;
+    }
+
+    @Override
+    public double getY() {
+        return y;
+    }
+
+    @Override
+    public double getZ() {
+        return z;
+    }
+
+    @Override
+    public float getYaw() {
+        return yaw;
+    }
+
+    @Override
+    public float getPitch() {
+        return pitch;
+    }
+
+    @Override
+    public void teleport(double x, double y, double z, float yaw, float pitch) {
+        synchronized (this) {
+            boolean isChanged = this.x != x || this.y != y || this.z != z || this.yaw != yaw || this.pitch != pitch;
+
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.yaw = yaw;
+            this.pitch = pitch;
+
+            if (isChanged) {
+                manager.teleport(x, y, z, yaw, pitch);
+            }
+        }
+    }
+
+    @Override
+    public void setPosRot(double x, double y, double z, float yaw, float pitch) {
+        synchronized (this) {
+            boolean isChanged = this.x != x || this.y != y || this.z != z || this.yaw != yaw || this.pitch != pitch;
+
+            double oldX = this.x;
+            double oldY = this.y;
+            double oldZ = this.z;
+
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.yaw = yaw;
+            this.pitch = pitch;
+
+            if (isChanged) {
+                manager.setPosRot(oldX, oldY, oldZ, x, y, z, yaw, pitch);
+            }
+        }
+    }
+
+    @Override
+    public void setPos(double x, double y, double z) {
+        synchronized (this) {
+            boolean isChanged = this.x != x || this.y != y || this.z != z;
+
+            double oldX = this.x;
+            double oldY = this.y;
+            double oldZ = this.z;
+
+            this.x = x;
+            this.y = y;
+            this.z = z;
+
+            if (isChanged) {
+                manager.setPos(oldX, oldY, oldZ, x, y, z);
+            }
+        }
+    }
+
+    @Override
+    public void setRot(float yaw, float pitch) {
+        synchronized (this) {
+            boolean isChanged = this.yaw != yaw || this.pitch != pitch;
+
+            this.yaw = yaw;
+            this.pitch = pitch;
+
+            if (isChanged) {
+                manager.setRot(yaw, pitch);
             }
         }
     }

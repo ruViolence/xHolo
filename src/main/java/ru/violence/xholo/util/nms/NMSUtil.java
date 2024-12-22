@@ -11,6 +11,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundBundlePacket;
+import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
@@ -28,7 +29,6 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -51,6 +51,8 @@ import ru.violence.xholo.api.CustomItem;
 import ru.violence.xholo.api.InteractionData;
 import ru.violence.xholo.api.ItemDisplayData;
 import ru.violence.xholo.api.TextDisplayData;
+import ru.violence.xholo.api.VirtualEntity;
+import ru.violence.xholo.util.RegistryHelper;
 import ru.violence.xholo.util.updateflags.UpdateFlag;
 import ru.violence.xholo.util.updateflags.UpdateFlags;
 
@@ -137,7 +139,9 @@ public class NMSUtil {
         return false;
     }
 
-    public void spawnEntityArmorStand(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ArmorStandData data,
+    public void spawnEntityArmorStand(@NotNull Player player, int entityId,
+                                      double x, double y, double z, float yaw, float pitch,
+                                      @NotNull ArmorStandData data,
                                       @Nullable ItemStack mainHandItem,
                                       @Nullable ItemStack offHandItem,
                                       @Nullable ItemStack headItem,
@@ -146,7 +150,7 @@ public class NMSUtil {
                                       @Nullable ItemStack feetItem) {
         List<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>(3);
 
-        packets.add(createSpawnEntityPacket(location, entityId, EntityType.ARMOR_STAND));
+        packets.add(createSpawnEntityPacket(x, y, z, yaw, pitch, entityId, EntityType.ARMOR_STAND));
         packets.add(createSetArmorStandMetadataPacket(player, entityId, data, null));
 
         ClientboundSetEquipmentPacket equipmentPacket = createEquipmentPacket(entityId, new Map.Entry[]{
@@ -162,7 +166,10 @@ public class NMSUtil {
         sendPacket(player, new ClientboundBundlePacket(packets));
     }
 
-    public void spawnEntityArmorStand(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ArmorStandData data, @NotNull org.bukkit.entity.Entity vehicle,
+    public void spawnEntityArmorStand(@NotNull Player player, int entityId,
+                                      double x, double y, double z, float yaw, float pitch,
+                                      @NotNull ArmorStandData data,
+                                      @NotNull org.bukkit.entity.Entity vehicle,
                                       @Nullable ItemStack mainHandItem,
                                       @Nullable ItemStack offHandItem,
                                       @Nullable ItemStack headItem,
@@ -171,7 +178,7 @@ public class NMSUtil {
                                       @Nullable ItemStack feetItem) {
         List<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>(3);
 
-        packets.add(createSpawnEntityPacket(location, entityId, EntityType.ARMOR_STAND));
+        packets.add(createSpawnEntityPacket(x, y, z, yaw, pitch, entityId, EntityType.ARMOR_STAND));
         packets.add(createSetArmorStandMetadataPacket(player, entityId, data, null));
 
         ClientboundSetEquipmentPacket equipmentPacket = createEquipmentPacket(entityId, new Map.Entry[]{
@@ -184,68 +191,133 @@ public class NMSUtil {
         }, true);
         if (equipmentPacket != null) packets.add(equipmentPacket);
 
-        packets.add(createSetPassengersPacket(vehicle.getEntityId(), entityId));
+        List<org.bukkit.entity.Entity> realPassengers = vehicle.getPassengers();
+        List<VirtualEntity> virtualPassengers = RegistryHelper.getOtherVirtualPassengers(player, entityId, vehicle);
+
+        int[] passengerIds = new int[realPassengers.size() + virtualPassengers.size() + 1];
+        for (int i = 0; i < realPassengers.size(); i++) passengerIds[i] = realPassengers.get(i).getEntityId();
+        for (int i = 0; i < virtualPassengers.size(); i++)
+            passengerIds[i + realPassengers.size()] = virtualPassengers.get(i).getEntityId();
+        passengerIds[passengerIds.length - 1] = entityId;
+
+        packets.add(createSetPassengersPacket(vehicle.getEntityId(), passengerIds));
 
         sendPacket(player, new ClientboundBundlePacket(packets));
     }
 
-    public void spawnEntityBlockDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull BlockDisplayData data) {
+    public void spawnEntityBlockDisplay(@NotNull Player player, int entityId,
+                                        double x, double y, double z, float yaw, float pitch,
+                                        @NotNull BlockDisplayData data) {
         sendPacket(player, new ClientboundBundlePacket(List.of(
-                createSpawnEntityPacket(location, entityId, EntityType.BLOCK_DISPLAY),
+                createSpawnEntityPacket(x, y, z, yaw, pitch, entityId, EntityType.BLOCK_DISPLAY),
                 createSetBlockDisplayMetadataPacket(entityId, data, null)
         )));
     }
 
-    public void spawnEntityBlockDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull BlockDisplayData data, @NotNull org.bukkit.entity.Entity vehicle) {
+    public void spawnEntityBlockDisplay(@NotNull Player player, int entityId,
+                                        double x, double y, double z, float yaw, float pitch,
+                                        @NotNull BlockDisplayData data,
+                                        @NotNull org.bukkit.entity.Entity vehicle) {
+        List<org.bukkit.entity.Entity> realPassengers = vehicle.getPassengers();
+        List<VirtualEntity> virtualPassengers = RegistryHelper.getOtherVirtualPassengers(player, entityId, vehicle);
+
+        int[] passengerIds = new int[realPassengers.size() + virtualPassengers.size() + 1];
+        for (int i = 0; i < realPassengers.size(); i++) passengerIds[i] = realPassengers.get(i).getEntityId();
+        for (int i = 0; i < virtualPassengers.size(); i++)
+            passengerIds[i + realPassengers.size()] = virtualPassengers.get(i).getEntityId();
+        passengerIds[passengerIds.length - 1] = entityId;
+
         sendPacket(player, new ClientboundBundlePacket(List.of(
-                createSpawnEntityPacket(location, entityId, EntityType.BLOCK_DISPLAY),
+                createSpawnEntityPacket(x, y, z, yaw, pitch, entityId, EntityType.BLOCK_DISPLAY),
                 createSetBlockDisplayMetadataPacket(entityId, data, null),
-                createSetPassengersPacket(vehicle.getEntityId(), entityId)
+                createSetPassengersPacket(vehicle.getEntityId(), passengerIds)
         )));
     }
 
-    public void spawnEntityItemDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ItemDisplayData data) {
+    public void spawnEntityItemDisplay(@NotNull Player player, int entityId,
+                                       double x, double y, double z, float yaw, float pitch,
+                                       @NotNull ItemDisplayData data) {
         sendPacket(player, new ClientboundBundlePacket(List.of(
-                createSpawnEntityPacket(location, entityId, EntityType.ITEM_DISPLAY),
+                createSpawnEntityPacket(x, y, z, yaw, pitch, entityId, EntityType.ITEM_DISPLAY),
                 createSetItemDisplayMetadataPacket(player, entityId, data, null)
         )));
     }
 
-    public void spawnEntityItemDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull ItemDisplayData data, @NotNull org.bukkit.entity.Entity vehicle) {
+    public void spawnEntityItemDisplay(@NotNull Player player, int entityId,
+                                       double x, double y, double z, float yaw, float pitch,
+                                       @NotNull ItemDisplayData data,
+                                       @NotNull org.bukkit.entity.Entity vehicle) {
+        List<org.bukkit.entity.Entity> realPassengers = vehicle.getPassengers();
+        List<VirtualEntity> virtualPassengers = RegistryHelper.getOtherVirtualPassengers(player, entityId, vehicle);
+
+        int[] passengerIds = new int[realPassengers.size() + virtualPassengers.size() + 1];
+        for (int i = 0; i < realPassengers.size(); i++) passengerIds[i] = realPassengers.get(i).getEntityId();
+        for (int i = 0; i < virtualPassengers.size(); i++)
+            passengerIds[i + realPassengers.size()] = virtualPassengers.get(i).getEntityId();
+        passengerIds[passengerIds.length - 1] = entityId;
+
         sendPacket(player, new ClientboundBundlePacket(List.of(
-                createSpawnEntityPacket(location, entityId, EntityType.ITEM_DISPLAY),
+                createSpawnEntityPacket(x, y, z, yaw, pitch, entityId, EntityType.ITEM_DISPLAY),
                 createSetItemDisplayMetadataPacket(player, entityId, data, null),
-                createSetPassengersPacket(vehicle.getEntityId(), entityId)
+                createSetPassengersPacket(vehicle.getEntityId(), passengerIds)
         )));
     }
 
-    public void spawnEntityTextDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull TextDisplayData data) {
+    public void spawnEntityTextDisplay(@NotNull Player player, int entityId,
+                                       double x, double y, double z, float yaw, float pitch,
+                                       @NotNull TextDisplayData data) {
         sendPacket(player, new ClientboundBundlePacket(List.of(
-                createSpawnEntityPacket(location, entityId, EntityType.TEXT_DISPLAY),
+                createSpawnEntityPacket(x, y, z, yaw, pitch, entityId, EntityType.TEXT_DISPLAY),
                 createSetTextDisplayMetadataPacket(player, entityId, data, null)
         )));
     }
 
-    public void spawnEntityTextDisplay(@NotNull Player player, int entityId, @NotNull Location location, @NotNull TextDisplayData data, @NotNull org.bukkit.entity.Entity vehicle) {
+    public void spawnEntityTextDisplay(@NotNull Player player, int entityId,
+                                       double x, double y, double z, float yaw, float pitch,
+                                       @NotNull TextDisplayData data,
+                                       @NotNull org.bukkit.entity.Entity vehicle) {
+        List<org.bukkit.entity.Entity> realPassengers = vehicle.getPassengers();
+        List<VirtualEntity> virtualPassengers = RegistryHelper.getOtherVirtualPassengers(player, entityId, vehicle);
+
+        int[] passengerIds = new int[realPassengers.size() + virtualPassengers.size() + 1];
+        for (int i = 0; i < realPassengers.size(); i++) passengerIds[i] = realPassengers.get(i).getEntityId();
+        for (int i = 0; i < virtualPassengers.size(); i++)
+            passengerIds[i + realPassengers.size()] = virtualPassengers.get(i).getEntityId();
+        passengerIds[passengerIds.length - 1] = entityId;
+
         sendPacket(player, new ClientboundBundlePacket(List.of(
-                createSpawnEntityPacket(location, entityId, EntityType.TEXT_DISPLAY),
+                createSpawnEntityPacket(x, y, z, yaw, pitch, entityId, EntityType.TEXT_DISPLAY),
                 createSetTextDisplayMetadataPacket(player, entityId, data, null),
-                createSetPassengersPacket(vehicle.getEntityId(), entityId)
+                createSetPassengersPacket(vehicle.getEntityId(), passengerIds)
         )));
     }
 
-    public void spawnEntityInteraction(@NotNull Player player, int entityId, @NotNull Location location, @NotNull InteractionData data) {
+    public void spawnEntityInteraction(@NotNull Player player, int entityId,
+                                       double x, double y, double z, float yaw, float pitch,
+                                       @NotNull InteractionData data) {
         sendPacket(player, new ClientboundBundlePacket(List.of(
-                createSpawnEntityPacket(location, entityId, EntityType.INTERACTION),
+                createSpawnEntityPacket(x, y, z, yaw, pitch, entityId, EntityType.INTERACTION),
                 createSetInteractionMetadataPacket(player, entityId, data, null)
         )));
     }
 
-    public void spawnEntityInteraction(@NotNull Player player, int entityId, @NotNull Location location, @NotNull InteractionData data, @NotNull org.bukkit.entity.Entity vehicle) {
+    public void spawnEntityInteraction(@NotNull Player player, int entityId,
+                                       double x, double y, double z, float yaw, float pitch,
+                                       @NotNull InteractionData data,
+                                       @NotNull org.bukkit.entity.Entity vehicle) {
+        List<org.bukkit.entity.Entity> realPassengers = vehicle.getPassengers();
+        List<VirtualEntity> virtualPassengers = RegistryHelper.getOtherVirtualPassengers(player, entityId, vehicle);
+
+        int[] passengerIds = new int[realPassengers.size() + virtualPassengers.size() + 1];
+        for (int i = 0; i < realPassengers.size(); i++) passengerIds[i] = realPassengers.get(i).getEntityId();
+        for (int i = 0; i < virtualPassengers.size(); i++)
+            passengerIds[i + realPassengers.size()] = virtualPassengers.get(i).getEntityId();
+        passengerIds[passengerIds.length - 1] = entityId;
+
         sendPacket(player, new ClientboundBundlePacket(List.of(
-                createSpawnEntityPacket(location, entityId, EntityType.INTERACTION),
+                createSpawnEntityPacket(x, y, z, yaw, pitch, entityId, EntityType.INTERACTION),
                 createSetInteractionMetadataPacket(player, entityId, data, null),
-                createSetPassengersPacket(vehicle.getEntityId(), entityId)
+                createSetPassengersPacket(vehicle.getEntityId(), passengerIds)
         )));
     }
 
@@ -277,19 +349,19 @@ public class NMSUtil {
     }
 
     @Contract(pure = true)
-    public @NotNull ClientboundAddEntityPacket createSpawnEntityPacket(@NotNull Location location, int entityId, @NotNull EntityType<?> type) {
+    public @NotNull ClientboundAddEntityPacket createSpawnEntityPacket(double x, double y, double z, float yaw, float pitch, int entityId, @NotNull EntityType<?> type) {
         return new ClientboundAddEntityPacket(
                 entityId,
                 UUID.randomUUID(),
-                location.getX(),
-                location.getY(),
-                location.getZ(),
-                location.getPitch(),
-                location.getYaw(),
+                x,
+                y,
+                z,
+                pitch,
+                yaw,
                 type,
                 0,
                 Vec3.ZERO,
-                location.getYaw()
+                yaw
         );
     }
 
@@ -356,18 +428,66 @@ public class NMSUtil {
         return new ClientboundSetEntityDataPacket(entityId, dataValues);
     }
 
-    public void teleportEntity(@NotNull Player player, int entityId, @NotNull Location location) {
+    public void teleportEntity(@NotNull Player player, int entityId, double newX, double newY, double newZ, float newYaw, float newPitch) {
         FriendlyByteBuf fbb = new FriendlyByteBuf(Unpooled.buffer());
 
         fbb.writeVarInt(entityId);
-        fbb.writeDouble(location.getX());
-        fbb.writeDouble(location.getY());
-        fbb.writeDouble(location.getZ());
-        fbb.writeByte((byte) ((int) (location.getYaw() * 256.0F / 360.0F)));
-        fbb.writeByte((byte) ((int) (location.getPitch() * 256.0F / 360.0F)));
+        fbb.writeDouble(newX);
+        fbb.writeDouble(newY);
+        fbb.writeDouble(newZ);
+        fbb.writeByte((byte) ((int) (newYaw * 256.0F / 360.0F)));
+        fbb.writeByte((byte) ((int) (newPitch * 256.0F / 360.0F)));
         fbb.writeBoolean(true); // onGround
 
         sendPacket(player, ClientboundTeleportEntityPacket.STREAM_CODEC.decode(fbb));
+    }
+
+    private long encode(double value) {
+        return Math.round(value * 4096.0);
+    }
+
+    public void moveEntityPosRot(@NotNull Player player, int entityId, double oldX, double oldY, double oldZ, double newX, double newY, double newZ, float newYaw, float newPitch) {
+        long deltaX = encode(newX) - encode(oldX);
+        long deltaY = encode(newY) - encode(oldY);
+        long deltaZ = encode(newZ) - encode(oldZ);
+        byte yaw = (byte) ((int) (newYaw * 256.0F / 360.0F));
+        byte pitch = (byte) ((int) (newPitch * 256.0F / 360.0F));
+
+        sendPacket(player, new ClientboundMoveEntityPacket.PosRot(
+                entityId,
+                (short) ((int) deltaX),
+                (short) ((int) deltaY),
+                (short) ((int) deltaZ),
+                yaw,
+                pitch,
+                true)
+        );
+    }
+
+    public void moveEntityPos(@NotNull Player player, int entityId, double oldX, double oldY, double oldZ, double newX, double newY, double newZ) {
+        long deltaX = encode(newX) - encode(oldX);
+        long deltaY = encode(newY) - encode(oldY);
+        long deltaZ = encode(newZ) - encode(oldZ);
+
+        sendPacket(player, new ClientboundMoveEntityPacket.Pos(
+                entityId,
+                (short) ((int) deltaX),
+                (short) ((int) deltaY),
+                (short) ((int) deltaZ),
+                true)
+        );
+    }
+
+    public void moveEntityRot(@NotNull Player player, int entityId, float newYaw, float newPitch) {
+        byte yaw = (byte) ((int) (newYaw * 256.0F / 360.0F));
+        byte pitch = (byte) ((int) (newPitch * 256.0F / 360.0F));
+
+        sendPacket(player, new ClientboundMoveEntityPacket.Rot(
+                entityId,
+                yaw,
+                pitch,
+                true)
+        );
     }
 
     public void destroyEntities(@NotNull Player player, int @NotNull ... entityIds) {

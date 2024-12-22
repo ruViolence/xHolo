@@ -9,13 +9,24 @@ import ru.violence.xholo.util.nms.NMSUtil;
 
 @UtilityClass
 public class Utils {
+    public static final double UNSET_DOUBLE = Double.NaN;
+    public static final float UNSET_FLOAT = Float.NaN;
+
+    public static boolean isUnset(double value) {
+        return Double.isNaN(value);
+    }
+
+    public static boolean isUnset(float value) {
+        return Float.isNaN(value);
+    }
+
     @Contract(pure = true)
-    public static boolean isInDisplayRange(@NotNull Player player, @NotNull Location loc, double range) {
+    public static boolean isInDisplayRange(@NotNull Player player, double x, double y, double z, double range) {
         Location playerLocation = player.getLocation();
 
-        double xDif = playerLocation.getX() - loc.getX();
-        double yDif = playerLocation.getY() - loc.getY();
-        double zDif = playerLocation.getZ() - loc.getZ();
+        double xDif = playerLocation.getX() - x;
+        double yDif = playerLocation.getY() - y;
+        double zDif = playerLocation.getZ() - z;
 
         double max = max(xDif, yDif, zDif);
         double min = min(xDif, yDif, zDif);
@@ -23,7 +34,7 @@ public class Utils {
         double maxRange = Math.min(range, NMSUtil.getFurthestViewableBlock(player));
 
         return max <= maxRange &&
-                min >= -maxRange;
+               min >= -maxRange;
     }
 
     @Contract(pure = true)

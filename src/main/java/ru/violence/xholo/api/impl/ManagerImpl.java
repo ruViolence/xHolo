@@ -1,5 +1,6 @@
 package ru.violence.xholo.api.impl;
 
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -71,7 +72,9 @@ public final class ManagerImpl implements Manager {
             int entityId = virtualEntity.getEntityId();
 
             if (virtualEntity instanceof VirtualArmorStand vas) {
-                NMSUtil.spawnEntityArmorStand(player, entityId, vas.getLocation(), vas.getData(),
+                NMSUtil.spawnEntityArmorStand(player, entityId,
+                        vas.getX(), vas.getY(), vas.getZ(), vas.getYaw(), vas.getPitch(),
+                        vas.getData(),
                         vas.getItemInHand(),
                         vas.getItemInOffHand(),
                         vas.getHelmet(),
@@ -79,13 +82,21 @@ public final class ManagerImpl implements Manager {
                         vas.getLeggings(),
                         vas.getBoots());
             } else if (virtualEntity instanceof VirtualBlockDisplay vbd) {
-                NMSUtil.spawnEntityBlockDisplay(player, entityId, vbd.getLocation(), vbd.getData());
+                NMSUtil.spawnEntityBlockDisplay(player, entityId,
+                        vbd.getX(), vbd.getY(), vbd.getZ(), vbd.getYaw(), vbd.getPitch(),
+                        vbd.getData());
             } else if (virtualEntity instanceof VirtualItemDisplay vid) {
-                NMSUtil.spawnEntityItemDisplay(player, entityId, vid.getLocation(), vid.getData());
+                NMSUtil.spawnEntityItemDisplay(player, entityId,
+                        vid.getX(), vid.getY(), vid.getZ(), vid.getYaw(), vid.getPitch(),
+                        vid.getData());
             } else if (virtualEntity instanceof VirtualTextDisplay vtd) {
-                NMSUtil.spawnEntityTextDisplay(player, entityId, vtd.getLocation(), vtd.getData());
+                NMSUtil.spawnEntityTextDisplay(player, entityId,
+                        vtd.getX(), vtd.getY(), vtd.getZ(), vtd.getYaw(), vtd.getPitch(),
+                        vtd.getData());
             } else if (virtualEntity instanceof VirtualInteraction vi) {
-                NMSUtil.spawnEntityInteraction(player, entityId, vi.getLocation(), vi.getData());
+                NMSUtil.spawnEntityInteraction(player, entityId,
+                        vi.getX(), vi.getY(), vi.getZ(), vi.getYaw(), vi.getPitch(),
+                        vi.getData());
             } else {
                 throw new IllegalStateException("Unknown entity type: " + virtualEntity.getClass().getSimpleName());
             }
@@ -103,13 +114,12 @@ public final class ManagerImpl implements Manager {
             int entityId = virtualEntity.getEntityId();
 
             Location vehicleLocation = vehicle.getLocation();
-            Location virtualEntityLocation = virtualEntity.getLocation();
-
-            vehicleLocation.setYaw(virtualEntityLocation.getYaw());
-            vehicleLocation.setPitch(virtualEntityLocation.getPitch());
 
             if (virtualEntity instanceof VirtualArmorStand vas) {
-                NMSUtil.spawnEntityArmorStand(player, entityId, vehicleLocation, vas.getData(), vehicle,
+                NMSUtil.spawnEntityArmorStand(player, entityId,
+                        vehicleLocation.getX(), vehicleLocation.getY(), vehicleLocation.getZ(), virtualEntity.getYaw(), virtualEntity.getPitch(),
+                        vas.getData(),
+                        vehicle,
                         vas.getItemInHand(),
                         vas.getItemInOffHand(),
                         vas.getHelmet(),
@@ -117,13 +127,25 @@ public final class ManagerImpl implements Manager {
                         vas.getLeggings(),
                         vas.getBoots());
             } else if (virtualEntity instanceof VirtualBlockDisplay vbd) {
-                NMSUtil.spawnEntityBlockDisplay(player, entityId, vehicleLocation, vbd.getData(), vehicle);
+                NMSUtil.spawnEntityBlockDisplay(player, entityId,
+                        vehicleLocation.getX(), vehicleLocation.getY(), vehicleLocation.getZ(), virtualEntity.getYaw(), virtualEntity.getPitch(),
+                        vbd.getData(),
+                        vehicle);
             } else if (virtualEntity instanceof VirtualItemDisplay vid) {
-                NMSUtil.spawnEntityItemDisplay(player, entityId, vehicleLocation, vid.getData(), vehicle);
+                NMSUtil.spawnEntityItemDisplay(player, entityId,
+                        vehicleLocation.getX(), vehicleLocation.getY(), vehicleLocation.getZ(), virtualEntity.getYaw(), virtualEntity.getPitch(),
+                        vid.getData(),
+                        vehicle);
             } else if (virtualEntity instanceof VirtualTextDisplay vtd) {
-                NMSUtil.spawnEntityTextDisplay(player, entityId, vehicleLocation, vtd.getData(), vehicle);
+                NMSUtil.spawnEntityTextDisplay(player, entityId,
+                        vehicleLocation.getX(), vehicleLocation.getY(), vehicleLocation.getZ(), virtualEntity.getYaw(), virtualEntity.getPitch(),
+                        vtd.getData(),
+                        vehicle);
             } else if (virtualEntity instanceof VirtualInteraction vi) {
-                NMSUtil.spawnEntityInteraction(player, entityId, vehicleLocation, vi.getData(), vehicle);
+                NMSUtil.spawnEntityInteraction(player, entityId,
+                        vehicleLocation.getX(), vehicleLocation.getY(), vehicleLocation.getZ(), virtualEntity.getYaw(), virtualEntity.getPitch(),
+                        vi.getData(),
+                        vehicle);
             } else {
                 throw new IllegalStateException("Unknown entity type: " + virtualEntity.getClass().getSimpleName());
             }
@@ -264,7 +286,7 @@ public final class ManagerImpl implements Manager {
         synchronized (virtualEntity) {
             Entity vehicle = getVehicle();
             if (vehicle != null) {
-                if (!vehicle.isValid() || !vehicle.isEmpty()) {
+                if (!vehicle.isValid()) {
                     hideAll();
                     return;
                 }
@@ -272,42 +294,42 @@ public final class ManagerImpl implements Manager {
                 Set<Player> trackedBy = vehicle.getTrackedBy();
 
                 for (Player viewer : getViewers()) {
+                    if (viewer == vehicle) { // Process self visibility
+                        Location location = viewer.getLocation();
+
+                        int chunkX = location.getBlockX() >> 4;
+                        int chunkZ = location.getBlockZ() >> 4;
+
+                        if (!viewer.isChunkSent(Chunk.getChunkKey(chunkX, chunkZ))) { // "Waiting for chunk" state
+                            hide(viewer); // Hide to prevent bugging out in unloaded chunks
+                        }
+                        continue;
+                    }
                     if (!trackedBy.contains(viewer)) {
                         hide(viewer);
                     }
                 }
 
+                // Process self visibility
+                if (vehicle instanceof Player player) {
+                    processVehicleVisibility(onUpdate, player, vehicle);
+                }
+
                 for (Player player : trackedBy) {
-                    if (player.equals(vehicle)) {
-                        hide(player);
-                        continue;
-                    }
-
-                    boolean passedFilter = isPassingCanSeeFilter(player);
-
-                    if (isShown(player)) {
-                        if (!passedFilter) {
-                            hide(player);
-                        }
-                    } else {
-                        if (passedFilter) {
-                            showAsPassenger(player, vehicle);
-                        }
-                    }
+                    processVehicleVisibility(onUpdate, player, vehicle);
                 }
 
                 return;
             }
 
-            Location veLoc = virtualEntity.getLocation();
-            World world = veLoc.getWorld();
+            World world = virtualEntity.getWorld();
             List<Player> players = worldPlayersCache != null ? worldPlayersCache.computeIfAbsent(world, World::getPlayers) : world.getPlayers();
 
             for (Player player : players) {
                 if (!NMSUtil.isRealPlayer(player)) continue;
                 if (NMSUtil.isRemoved(player)) continue;
 
-                boolean isInRange = Utils.isInDisplayRange(player, veLoc, getDisplayRange());
+                boolean isInRange = Utils.isInDisplayRange(player, virtualEntity.getX(), virtualEntity.getY(), virtualEntity.getZ(), getDisplayRange());
 
                 if (isInRange) {
                     boolean passedFilter = isPassingCanSeeFilter(player);
@@ -327,6 +349,24 @@ public final class ManagerImpl implements Manager {
                     hide(player);
                 }
             }
+        }
+    }
+
+    private void processVehicleVisibility(@Nullable Consumer<Player> onUpdate, Player player, Entity vehicle) {
+        boolean passedFilter = isPassingCanSeeFilter(player);
+
+        if (isShown(player)) {
+            if (!passedFilter) {
+                hide(player);
+            }
+        } else {
+            if (passedFilter) {
+                showAsPassenger(player, vehicle);
+            }
+        }
+
+        if (onUpdate != null && passedFilter) {
+            onUpdate.accept(player);
         }
     }
 
@@ -385,17 +425,42 @@ public final class ManagerImpl implements Manager {
         }
     }
 
-    void updateLocation(boolean isWorldChanged) {
+    void teleport(double newX, double newY, double newZ, float newYaw, float newPitch) {
         synchronized (virtualEntity) {
-            if (isWorldChanged) {
-                hideAll();
-            }
-
             updateVisibility(null, player -> {
                 int entityId = virtualEntity.getEntityId();
-                Location location = virtualEntity.getLocation();
 
-                NMSUtil.teleportEntity(player, entityId, location);
+                NMSUtil.teleportEntity(player, entityId, newX, newY, newZ, newYaw, newPitch);
+            });
+        }
+    }
+
+    void setPosRot(double oldX, double oldY, double oldZ, double newX, double newY, double newZ, float newYaw, float newPitch) {
+        synchronized (virtualEntity) {
+            updateVisibility(null, player -> {
+                int entityId = virtualEntity.getEntityId();
+
+                NMSUtil.moveEntityPosRot(player, entityId, oldX, oldY, oldZ, newX, newY, newZ, newYaw, newPitch);
+            });
+        }
+    }
+
+    void setPos(double oldX, double oldY, double oldZ, double newX, double newY, double newZ) {
+        synchronized (virtualEntity) {
+            updateVisibility(null, player -> {
+                int entityId = virtualEntity.getEntityId();
+
+                NMSUtil.moveEntityPos(player, entityId, oldX, oldY, oldZ, newX, newY, newZ);
+            });
+        }
+    }
+
+    void setRot(float newYaw, float newPitch) {
+        synchronized (virtualEntity) {
+            updateVisibility(null, player -> {
+                int entityId = virtualEntity.getEntityId();
+
+                NMSUtil.moveEntityRot(player, entityId, newYaw, newPitch);
             });
         }
     }
