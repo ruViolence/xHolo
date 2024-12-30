@@ -1,7 +1,6 @@
 package ru.violence.xholo.util;
 
 import lombok.experimental.UtilityClass;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -22,11 +21,9 @@ public class Utils {
 
     @Contract(pure = true)
     public static boolean isInDisplayRange(@NotNull Player player, double x, double y, double z, double range) {
-        Location playerLocation = player.getLocation();
-
-        double xDif = playerLocation.getX() - x;
-        double yDif = playerLocation.getY() - y;
-        double zDif = playerLocation.getZ() - z;
+        double xDif = player.getX() - x;
+        double yDif = player.getY() - y;
+        double zDif = player.getZ() - z;
 
         double max = max(xDif, yDif, zDif);
         double min = min(xDif, yDif, zDif);
