@@ -12,7 +12,7 @@ import java.util.List;
 public interface HologramRegistry {
     @Contract(pure = true)
     @Nullable VirtualEntity getFromId(int entityId);
-    
+
     @Contract(value = "_ -> new", pure = true)
     @NotNull List<VirtualEntity> getAllFrom(@NotNull World world);
 
