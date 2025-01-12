@@ -80,13 +80,11 @@ public final class HologramRegistryImpl implements HologramRegistry {
         Check.notNull(player, "Player is null");
         List<VirtualEntity> list = new ArrayList<>();
 
-        lock.readLock().lock();
-        for (VirtualEntity ve : virtualEntities.values()) {
+        for (VirtualEntity ve : getAllFrom(player.getWorld())) {
             if (ve.manager().isVisibleFor(player)) {
                 list.add(ve);
             }
         }
-        lock.readLock().unlock();
 
         return list;
     }
