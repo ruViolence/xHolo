@@ -35,7 +35,7 @@ public final class HologramRegistryImpl implements HologramRegistry {
     public void unregister(@NotNull VirtualEntity ve) {
         Check.notNull(ve, "VirtualEntity is null");
         lock.writeLock().lock();
-        virtualEntities.remove(ve);
+        virtualEntities.remove(ve.getEntityId());
         lock.writeLock().unlock();
     }
 
